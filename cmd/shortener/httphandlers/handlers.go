@@ -1,7 +1,6 @@
 package httphandlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -48,14 +47,7 @@ func ShortenURL(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var data URLData
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		http.Error(res, "Error unmarshalling request body", http.StatusBadRequest)
-		return
-	}
-
-	shortURL, hash := tools.Shorten(data.URL)
+	shortURL, hash := tools.Shorten(string(body))
 	if _, ok := vault[hash]; !ok {
 		vault[hash] = shortURL
 	}
