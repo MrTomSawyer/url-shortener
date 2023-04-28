@@ -23,13 +23,13 @@ func HTTPHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	switch req.Method {
 	case "POST":
-		ShortenUrl(res, req)
+		ShortenURL(res, req)
 	case "GET":
 		GetOriginalURL(res, req)
 	}
 }
 
-func ShortenUrl(res http.ResponseWriter, req *http.Request) {
+func ShortenURL(res http.ResponseWriter, req *http.Request) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -55,12 +55,12 @@ func ShortenUrl(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	shortUrl, hash := tools.Shorten(data.URL)
+	shortURL, hash := tools.Shorten(data.URL)
 	if _, ok := vault[hash]; !ok {
-		vault[hash] = shortUrl
+		vault[hash] = shortURL
 	}
 	res.WriteHeader(http.StatusCreated)
-	if _, err = res.Write([]byte(shortUrl)); err != nil {
+	if _, err = res.Write([]byte(shortURL)); err != nil {
 		http.Error(res, "Error sending response", http.StatusInternalServerError)
 	}
 }
