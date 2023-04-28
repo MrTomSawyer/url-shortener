@@ -47,9 +47,15 @@ func ShortenURL(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	shortURL, hash := tools.Shorten(string(body))
+	bodyStr := string(body)
+	if bodyStr == "" {
+		http.Error(res, "Can't shorten empty string", http.StatusBadRequest)
+		return
+	}
+
+	shortURL, hash := tools.Shorten(bodyStr)
 	if _, ok := vault[hash]; !ok {
-		vault[hash] = shortURL
+		vault[hash] = bodyStr
 	}
 	res.WriteHeader(http.StatusCreated)
 	if _, err = res.Write([]byte(shortURL)); err != nil {
@@ -59,6 +65,7 @@ func ShortenURL(res http.ResponseWriter, req *http.Request) {
 
 func GetOriginalURL(res http.ResponseWriter, req *http.Request) {
 	_, id := path.Split(req.URL.Path)
+	fmt.Println(vault)
 	if value, ok := vault[id]; ok {
 		res.Header().Set("Location", value)
 		res.WriteHeader(http.StatusTemporaryRedirect)
