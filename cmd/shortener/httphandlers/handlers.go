@@ -67,18 +67,11 @@ func ShortenUrl(res http.ResponseWriter, req *http.Request) {
 }
 
 func GetOriginalURL(res http.ResponseWriter, req *http.Request) {
-	err := req.ParseForm()
-	if err != nil {
-		http.Error(res, "Error parsing request params", http.StatusInternalServerError)
-		return
-	}
 	_, id := path.Split(req.URL.Path)
 	if value, ok := vault[id]; ok {
 		res.Header().Set("Location", value)
 		res.WriteHeader(http.StatusTemporaryRedirect)
 	} else {
-		fmt.Println(id)
-		fmt.Println(vault)
 		http.Error(res, "URL not found", http.StatusNotFound)
 	}
 }
