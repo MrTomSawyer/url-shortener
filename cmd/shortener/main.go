@@ -12,8 +12,7 @@ func run(m *http.ServeMux) error {
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/{id}", h.GetOriginalURL)
-	mux.HandleFunc("/", h.ShortenUrl)
+	mux.HandleFunc("/", h.HTTPHandler)
 
 	if err := run(mux); err != nil {
 		panic(err)
