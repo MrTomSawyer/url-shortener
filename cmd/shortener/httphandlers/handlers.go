@@ -25,7 +25,6 @@ func HTTPHandler(res http.ResponseWriter, req *http.Request) {
 	case "POST":
 		ShortenUrl(res, req)
 	case "GET":
-		fmt.Println("GET")
 		GetOriginalURL(res, req)
 	}
 }
