@@ -70,7 +70,7 @@ func TestShortenURL(t *testing.T) {
 			assert.Equal(t, test.want.code, w.Code, "Wrong response code")
 
 			if test.want.resBody != "" {
-				assert.Equal(t, test.want.resBody, w.Body.String(), "Responce body is different than the expected one")
+				assert.Equal(t, test.want.resBody, w.Body.String(), "Wrong response body")
 			}
 		})
 	}
