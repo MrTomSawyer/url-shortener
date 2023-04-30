@@ -65,7 +65,6 @@ func ShortenURL(res http.ResponseWriter, req *http.Request) {
 
 func GetOriginalURL(res http.ResponseWriter, req *http.Request) {
 	_, id := path.Split(req.URL.Path)
-	fmt.Println(vault)
 	if value, ok := vault[id]; ok {
 		res.Header().Set("Location", value)
 		res.WriteHeader(http.StatusTemporaryRedirect)
