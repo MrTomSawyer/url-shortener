@@ -2,7 +2,6 @@ package httphandlers
 
 import (
 	"bytes"
-	"fmt"
 	"net/http/httptest"
 	"testing"
 
@@ -101,8 +100,6 @@ func TestGetOriginalURL(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			GetOriginalURL(w, r)
-
-			fmt.Println(vault)
 
 			assert.Equal(t, test.want.code, w.Code, "Wrong response code")
 
