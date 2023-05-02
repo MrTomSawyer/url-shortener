@@ -38,17 +38,7 @@ func TestShortenURL(t *testing.T) {
 			},
 		},
 		{
-			name:   "Test #2 - Wrong HTTP Method",
-			path:   "/",
-			method: "DELETE",
-			body:   "https://yandex.ru",
-			want: want{
-				code:    405,
-				resBody: "",
-			},
-		},
-		{
-			name:   "Test #3 - Empry Body",
+			name:   "Test #2 - Empry Body",
 			path:   "/",
 			method: "GET",
 			body:   "",
@@ -86,7 +76,7 @@ func TestGetOriginalURL(t *testing.T) {
 		want   want
 	}{
 		{
-			name:   "Test #4 - Get Original URL",
+			name:   "Test #3 - Get Original URL",
 			path:   "/e9db20b2",
 			method: "GET",
 			want: want{
@@ -95,7 +85,7 @@ func TestGetOriginalURL(t *testing.T) {
 			},
 		},
 		{
-			name:   "Test #5 - Wrong code",
+			name:   "Test #4 - Wrong code",
 			path:   "/fff",
 			method: "GET",
 			want: want{
