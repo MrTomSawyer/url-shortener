@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	f "github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,6 +19,7 @@ type want struct {
 }
 
 func TestShortenURL(t *testing.T) {
+	f.ParseFlags()
 
 	tests := []struct {
 		name   string
