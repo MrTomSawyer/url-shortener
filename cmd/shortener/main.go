@@ -10,7 +10,7 @@ import (
 var repo = make(map[string]string)
 
 func main() {
-	config.ParseFlags()
+	config.InitServerConfig()
 
 	services := service.NewService(repo)
 	handler := handler.NewHandler(services)
