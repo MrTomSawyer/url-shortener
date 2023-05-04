@@ -22,6 +22,10 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 		http.Error(c.Writer, "Error reading request body", http.StatusInternalServerError)
 		return
 	}
+	if len(data) == 0 {
+		http.Error(c.Writer, "", http.StatusBadRequest)
+		return
+	}
 
 	bodyStr := string(data)
 	shortURL := h.services.URL.ShortenURL(bodyStr)
@@ -30,8 +34,9 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 }
 
 func (h *Handler) GetOriginalURL(c *gin.Context) {
-	id, ok := c.Params.Get("id")
-	if !ok {
+	id := c.Request.URL.String()[1:]
+
+	if id == "" {
 		http.Error(c.Writer, "Error reading id param", http.StatusInternalServerError)
 		return
 	}
@@ -41,6 +46,6 @@ func (h *Handler) GetOriginalURL(c *gin.Context) {
 		http.Error(c.Writer, "No original URL found", http.StatusNotFound)
 		return
 	}
-	c.Header("Location", value)
 	c.Status(http.StatusTemporaryRedirect)
+	c.Header("Location", value)
 }

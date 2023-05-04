@@ -14,7 +14,7 @@ type URLservice struct {
 
 func NewURLservice(m map[string]string) *URLservice {
 	return &URLservice{
-		repo: make(map[string]string),
+		repo: m,
 	}
 }
 
