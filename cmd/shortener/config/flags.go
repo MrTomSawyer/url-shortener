@@ -5,8 +5,7 @@ import (
 	"os"
 )
 
-var ServerAddr string
-var DefaultAddr string
+var ServerAddr, DefaultAddr string
 
 func InitServerConfig() {
 	flag.StringVar(&ServerAddr, "a", ":8080", "address and port to run server")
