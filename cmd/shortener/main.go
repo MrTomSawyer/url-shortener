@@ -1,22 +1,26 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
 	"github.com/MrTomSawyer/url-shortener/cmd/shortener/handler"
 	"github.com/MrTomSawyer/url-shortener/cmd/shortener/server"
 	"github.com/MrTomSawyer/url-shortener/cmd/shortener/service"
 )
 
-var repo = make(map[string]string)
-
 func main() {
-	config.InitServerConfig()
+	flag.Parse()
 
-	services := service.NewService(repo)
+	var appConfig config.AppConfig
+	config.InitAppConfig(&appConfig)
+	repo := make(map[string]string)
+
+	services := service.NewServiceContainer(repo, appConfig)
 	handler := handler.NewHandler(services)
 	server := new(server.Server)
 
-	if err := server.Run(config.ServerAddr, handler.InitRoutes()); err != nil {
+	if err := server.Run(appConfig.Server.ServerAddr, handler.InitRoutes()); err != nil {
 		panic(err)
 	}
 }

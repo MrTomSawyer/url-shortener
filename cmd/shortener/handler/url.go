@@ -34,7 +34,7 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 }
 
 func (h *Handler) GetOriginalURL(c *gin.Context) {
-	id := c.Request.URL.String()[1:]
+	id := c.Param("id")
 
 	if id == "" {
 		http.Error(c.Writer, "Error reading id param", http.StatusInternalServerError)

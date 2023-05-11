@@ -9,20 +9,15 @@ import (
 )
 
 type URLservice struct {
-	repo map[string]string
-}
-
-func NewURLservice(m map[string]string) *URLservice {
-	return &URLservice{
-		repo: m,
-	}
+	repo   map[string]string
+	config config.AppConfig
 }
 
 func (u *URLservice) ShortenURL(body string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(body))
 	hash := hex.EncodeToString(hasher.Sum(nil))[:8]
-	shortURL := fmt.Sprintf("%s/%s", config.DefaultAddr, hash)
+	shortURL := fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, hash)
 	if _, ok := u.repo[hash]; !ok {
 		u.repo[hash] = body
 	}

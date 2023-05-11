@@ -12,6 +12,11 @@ import (
 )
 
 var testVault = make(map[string]string)
+var appConfig config.AppConfig
+
+func init() {
+	config.InitAppConfig(&appConfig)
+}
 
 type want struct {
 	code     int
@@ -19,7 +24,6 @@ type want struct {
 }
 
 func TestShortenURL(t *testing.T) {
-	config.InitServerConfig()
 	tests := []struct {
 		name   string
 		path   string
@@ -56,7 +60,7 @@ func TestShortenURL(t *testing.T) {
 
 			с.Request, _ = http.NewRequest(test.method, test.path, strings.NewReader(test.body))
 			h := Handler{
-				services: service.NewService(testVault),
+				services: service.NewServiceContainer(testVault, appConfig),
 			}
 			h.ShortenURL(с)
 
@@ -105,10 +109,9 @@ func TestGetOriginalURL(t *testing.T) {
 
 			c.Request, _ = http.NewRequest(test.method, test.path, strings.NewReader(""))
 			h := Handler{
-				services: service.NewService(testVault),
+				services: service.NewServiceContainer(testVault, appConfig),
 			}
 			h.GetOriginalURL(c)
-
 			if c.Writer.Status() != test.want.code {
 				t.Errorf("got status code %d, want %d", w.Code, test.want.code)
 			}
