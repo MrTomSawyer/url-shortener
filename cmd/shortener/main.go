@@ -12,8 +12,8 @@ import (
 func main() {
 	flag.Parse()
 
-	var appConfig config.AppConfig
-	config.InitAppConfig(&appConfig)
+	appConfig := config.AppConfig{}
+	appConfig.InitAppConfig()
 	repo := make(map[string]string)
 
 	services := service.NewServiceContainer(repo, appConfig)

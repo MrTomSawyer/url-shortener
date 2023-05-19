@@ -32,20 +32,3 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 
 	c.String(http.StatusCreated, shortURL)
 }
-
-func (h *Handler) GetOriginalURL(c *gin.Context) {
-	id := c.Param("id")
-
-	if id == "" {
-		http.Error(c.Writer, "Error reading id param", http.StatusInternalServerError)
-		return
-	}
-
-	value, err := h.services.URL.GetOriginalURL(id)
-	if err != nil {
-		http.Error(c.Writer, "No original URL found", http.StatusNotFound)
-		return
-	}
-	c.Status(http.StatusTemporaryRedirect)
-	c.Header("Location", value)
-}

@@ -8,12 +8,12 @@ import (
 	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
 )
 
-type URLservice struct {
+type urlService struct {
 	repo   map[string]string
 	config config.AppConfig
 }
 
-func (u *URLservice) ShortenURL(body string) string {
+func (u *urlService) ShortenURL(body string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(body))
 	hash := hex.EncodeToString(hasher.Sum(nil))[:8]
@@ -24,7 +24,7 @@ func (u *URLservice) ShortenURL(body string) string {
 	return shortURL
 }
 
-func (u *URLservice) GetOriginalURL(path string) (string, error) {
+func (u *urlService) ExpandURL(path string) (string, error) {
 	if value, ok := u.repo[path]; ok {
 		return value, nil
 	} else {
