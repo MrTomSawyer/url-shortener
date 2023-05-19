@@ -10,10 +10,10 @@ import (
 )
 
 func main() {
-	flag.Parse()
-
 	appConfig := config.AppConfig{}
 	appConfig.InitAppConfig()
+	flag.Parse()
+
 	repo := make(map[string]string)
 
 	services := service.NewServiceContainer(repo, appConfig)
