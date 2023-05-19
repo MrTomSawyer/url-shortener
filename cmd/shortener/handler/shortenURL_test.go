@@ -33,7 +33,7 @@ func TestShortenURL(t *testing.T) {
 	}{
 		{
 			name:   "Test #1 - Regular URL",
-			path:   "/",
+			path:   "http://localhost:8080/",
 			method: "POST",
 			body:   "https://yandex.ru",
 			want: want{
@@ -43,7 +43,7 @@ func TestShortenURL(t *testing.T) {
 		},
 		{
 			name:   "Test #2 - Empty Body",
-			path:   "/",
+			path:   "http://localhost:8080/",
 			method: "POST",
 			body:   "",
 			want: want{

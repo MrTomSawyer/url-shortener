@@ -29,7 +29,7 @@ func TestExpandURL(t *testing.T) {
 	}{
 		{
 			name:   "Test #3 - Get Original URL",
-			path:   "/e9db20b2",
+			path:   "http://localhost:8080/e9db20b2",
 			method: "GET",
 			want: want{
 				code:     307,
@@ -38,7 +38,7 @@ func TestExpandURL(t *testing.T) {
 		},
 		{
 			name:   "Test #4 - Wrong code",
-			path:   "/fff",
+			path:   "http://localhost:8080/fff",
 			method: "GET",
 			want: want{
 				code:     404,
