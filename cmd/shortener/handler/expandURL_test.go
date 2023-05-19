@@ -14,7 +14,7 @@ import (
 func TestExpandURL(t *testing.T) {
 	appConfig := config.AppConfig{}
 	appConfig.InitAppConfig()
-	var testVault = make(map[string]string)
+	var testVault = map[string]string{"e9db20b2": "https://yandex.ru"}
 
 	type want struct {
 		code     int
@@ -23,13 +23,15 @@ func TestExpandURL(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		path   string
+		url    string
+		id     string
 		method string
 		want   want
 	}{
 		{
 			name:   "Test #3 - Get Original URL",
-			path:   "http://localhost:8080/e9db20b2",
+			url:    "http://localhost:8080",
+			id:     "e9db20b2",
 			method: "GET",
 			want: want{
 				code:     307,
@@ -38,7 +40,8 @@ func TestExpandURL(t *testing.T) {
 		},
 		{
 			name:   "Test #4 - Wrong code",
-			path:   "http://localhost:8080/fff",
+			url:    "http://localhost:8080",
+			id:     "fff",
 			method: "GET",
 			want: want{
 				code:     404,
@@ -52,7 +55,8 @@ func TestExpandURL(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 
-			c.Request, _ = http.NewRequest(test.method, test.path, strings.NewReader(""))
+			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(""))
+			c.AddParam("id", test.id)
 			h := Handler{
 				services: service.NewServiceContainer(testVault, appConfig),
 			}

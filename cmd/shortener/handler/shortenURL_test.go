@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"flag"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -11,11 +13,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func init() {
-
-}
-
 func TestShortenURL(t *testing.T) {
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	appConfig := config.AppConfig{}
 	appConfig.InitAppConfig()
 	var testVault = make(map[string]string)
@@ -26,14 +25,14 @@ func TestShortenURL(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		path   string
+		url    string
 		method string
 		body   string
 		want   want
 	}{
 		{
 			name:   "Test #1 - Regular URL",
-			path:   "http://localhost:8080/",
+			url:    "http://localhost:8080",
 			method: "POST",
 			body:   "https://yandex.ru",
 			want: want{
@@ -43,7 +42,7 @@ func TestShortenURL(t *testing.T) {
 		},
 		{
 			name:   "Test #2 - Empty Body",
-			path:   "http://localhost:8080/",
+			url:    "http://localhost:8080",
 			method: "POST",
 			body:   "",
 			want: want{
@@ -58,7 +57,8 @@ func TestShortenURL(t *testing.T) {
 			w := httptest.NewRecorder()
 			с, _ := gin.CreateTestContext(w)
 
-			с.Request, _ = http.NewRequest(test.method, test.path, strings.NewReader(test.body))
+			с.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(test.body))
+
 			h := Handler{
 				services: service.NewServiceContainer(testVault, appConfig),
 			}
