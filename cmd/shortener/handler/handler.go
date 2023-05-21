@@ -5,6 +5,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type logger interface {
+	Infof(template string, args ...interface{})
+}
+
 type Handler struct {
 	services *service.ServiceContainer
 }
@@ -15,8 +19,9 @@ func NewHandler(services *service.ServiceContainer) *Handler {
 	}
 }
 
-func (h Handler) InitRoutes() *gin.Engine {
+func (h Handler) InitRoutes(lg logger) *gin.Engine {
 	router := gin.New()
+	router.Use(h.logReqResInfo(lg))
 
 	router.POST("/", h.ShortenURL)
 	router.GET("/:id", h.ExpandURL)
