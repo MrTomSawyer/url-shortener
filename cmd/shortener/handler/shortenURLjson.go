@@ -25,12 +25,12 @@ func (h *Handler) ShortenURLjson(c *gin.Context) {
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if req.Url == "" {
+	if req.URL == "" {
 		c.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	shortenURL := h.services.URL.ShortenURL(req.Url)
+	shortenURL := h.services.URL.ShortenURL(req.URL)
 
 	res := models.ShortenResponce{
 		Result: shortenURL,
