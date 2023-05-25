@@ -28,7 +28,7 @@ func (h Handler) InitRoutes(lg logger) *gin.Engine {
 
 	api := router.Group("/api")
 	{
-		api.POST("/shorten", h.shortenURLjson)
+		api.POST("/shorten", h.ShortenURLjson)
 	}
 
 	return router
