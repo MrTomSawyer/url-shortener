@@ -9,8 +9,9 @@ import (
 )
 
 type urlService struct {
-	repo   map[string]string
-	config config.AppConfig
+	repo    map[string]string
+	config  config.AppConfig
+	storage *Storage
 }
 
 func (u *urlService) ShortenURL(body string) string {
@@ -21,6 +22,7 @@ func (u *urlService) ShortenURL(body string) string {
 	if _, ok := u.repo[hash]; !ok {
 		u.repo[hash] = body
 	}
+	u.storage.Write()
 	return shortURL
 }
 

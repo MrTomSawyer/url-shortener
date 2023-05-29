@@ -2,6 +2,7 @@ package handler
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -17,6 +18,10 @@ func TestShortenURL(t *testing.T) {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	appConfig := config.AppConfig{}
 	appConfig.InitAppConfig()
+	storage, err := service.NewStorage(appConfig.Server.TempFolder)
+	if err != nil {
+		fmt.Println("Error creating test storage")
+	}
 
 	var testVault = make(map[string]string)
 	type want struct {
@@ -61,7 +66,7 @@ func TestShortenURL(t *testing.T) {
 			с.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(test.body))
 
 			h := Handler{
-				services: service.NewServiceContainer(testVault, appConfig),
+				services: service.NewServiceContainer(testVault, appConfig, storage),
 			}
 			h.ShortenURL(с)
 

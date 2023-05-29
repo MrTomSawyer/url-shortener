@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,6 +16,10 @@ func TestExpandURL(t *testing.T) {
 	appConfig := config.AppConfig{}
 	appConfig.InitAppConfig()
 	var testVault = map[string]string{"e9db20b2": "https://yandex.ru"}
+	storage, err := service.NewStorage(appConfig.Server.TempFolder)
+	if err != nil {
+		fmt.Println("Error creating test storage")
+	}
 
 	type want struct {
 		code     int
@@ -58,7 +63,7 @@ func TestExpandURL(t *testing.T) {
 			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(""))
 			c.AddParam("id", test.id)
 			h := Handler{
-				services: service.NewServiceContainer(testVault, appConfig),
+				services: service.NewServiceContainer(testVault, appConfig, storage),
 			}
 			h.ExpandURL(c)
 			if c.Writer.Status() != test.want.code {

@@ -6,11 +6,12 @@ type ServiceContainer struct {
 	URL urlService
 }
 
-func NewServiceContainer(repo map[string]string, config config.AppConfig) *ServiceContainer {
+func NewServiceContainer(repo map[string]string, config config.AppConfig, storage *Storage) *ServiceContainer {
 	return &ServiceContainer{
 		URL: urlService{
-			repo:   repo,
-			config: config,
+			repo:    repo,
+			config:  config,
+			storage: storage,
 		},
 	}
 }

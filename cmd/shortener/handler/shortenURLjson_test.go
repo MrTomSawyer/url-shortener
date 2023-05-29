@@ -20,6 +20,10 @@ func TestShortenURLjson(t *testing.T) {
 	appConfig := config.AppConfig{}
 	appConfig.InitAppConfig()
 	testVault := make(map[string]string)
+	storage, err := service.NewStorage(appConfig.Server.TempFolder)
+	if err != nil {
+		fmt.Println("Error creating test storage")
+	}
 	type want struct {
 		code     int
 		response map[string]string
@@ -70,7 +74,7 @@ func TestShortenURLjson(t *testing.T) {
 
 			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(string(bodyStr)))
 			h := Handler{
-				services: service.NewServiceContainer(testVault, appConfig),
+				services: service.NewServiceContainer(testVault, appConfig, storage),
 			}
 			h.ShortenURLjson(c)
 
