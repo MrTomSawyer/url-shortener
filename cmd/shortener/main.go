@@ -27,6 +27,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = storage.Read(&repo)
+	if err != nil {
+		panic(err)
+	}
+
 	services, err := service.NewServiceContainer(repo, appConfig, storage)
 	if err != nil {
 		panic(err)

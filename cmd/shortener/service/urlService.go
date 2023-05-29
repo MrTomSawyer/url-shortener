@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 
 	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
 	m "github.com/MrTomSawyer/url-shortener/internal/models"
@@ -20,9 +21,22 @@ func (u *urlService) ShortenURL(body string) (string, error) {
 	hasher := md5.New()
 	hasher.Write([]byte(body))
 	hash := hex.EncodeToString(hasher.Sum(nil))[:8]
-	shortURL := fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, hash)
+
+	var shortURL string
 	if _, ok := u.repo[hash]; !ok {
 		u.repo[hash] = body
+		shortURL = fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, hash)
+	} else {
+		counter := 1
+		for {
+			newHash := hash + strconv.Itoa(counter)
+			if _, ok := u.repo[newHash]; !ok {
+				u.repo[newHash] = body
+				shortURL = fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, newHash)
+				break
+			}
+			counter++
+		}
 	}
 
 	uj := m.URLJson{

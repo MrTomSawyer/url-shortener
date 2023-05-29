@@ -22,4 +22,4 @@ vendor/
 .idea
 .vscode
 
-short-url-db.*
+cmd/shortener/tmp/short-url-db.json

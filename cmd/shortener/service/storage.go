@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	m "github.com/MrTomSawyer/url-shortener/internal/models"
 )
@@ -34,18 +36,36 @@ func (s *Storage) Write(uj *m.URLJson) error {
 	return s.writer.Flush()
 }
 
-func (s *Storage) Read() (*m.URLJson, error) {
-	data, err := s.reader.ReadBytes('\n')
+func (s *Storage) Read(repo *map[string]string) error {
+	_, err := s.file.Seek(0, 0)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	uj := m.URLJson{}
-	err = json.Unmarshal(data, &uj)
-	if err != nil {
-		return nil, err
+	for {
+		line, err := s.reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+
+		uj := m.URLJson{}
+		err = json.Unmarshal([]byte(line), &uj)
+		if err != nil {
+			return err
+		}
+
+		u, err := url.Parse(uj.ShortURL)
+		if err != nil {
+			return err
+		}
+
+		trimmedPath := strings.TrimLeft(u.Path, "/")
+		(*repo)[trimmedPath] = uj.OriginalURL
 	}
-	return &uj, nil
+	return nil
 }
 
 func (s Storage) LastUUID() (int, error) {
