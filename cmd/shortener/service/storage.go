@@ -79,26 +79,19 @@ func (s Storage) LastUUID() (int, error) {
 }
 
 func NewStorage(path string) (*Storage, error) {
-	_, err := os.Stat(path)
+	currentDir, err := os.Getwd()
 	if err != nil {
-		if os.IsNotExist(err) {
-			currentDir, err := os.Getwd()
-			if err != nil {
-				return nil, err
-			}
-			filePath := filepath.Join(currentDir, path)
-			file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-			if err != nil {
-				return nil, fmt.Errorf("error creating file: %v", err)
-			}
-
-			return &Storage{
-				file:   file,
-				reader: *bufio.NewReader(file),
-				writer: *bufio.NewWriter(file),
-			}, nil
-		}
 		return nil, err
 	}
-	return nil, fmt.Errorf("this storage already exists")
+	filePath := filepath.Join(currentDir, path)
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		return nil, fmt.Errorf("error creating file: %v", err)
+	}
+
+	return &Storage{
+		file:   file,
+		reader: *bufio.NewReader(file),
+		writer: *bufio.NewWriter(file),
+	}, nil
 }
