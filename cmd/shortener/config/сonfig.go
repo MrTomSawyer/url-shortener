@@ -24,7 +24,7 @@ func (a *AppConfig) InitAppConfig() {
 	if envDefaultAddr := os.Getenv("BASE_URL"); envDefaultAddr != "" {
 		a.Server.DefaultAddr = envDefaultAddr
 	}
-	if envDefaultAddr := os.Getenv("FILE_STORAGE_PATH"); envDefaultAddr != "" {
-		a.Server.TempFolder = envDefaultAddr
+	if envTempFolder := os.Getenv("FILE_STORAGE_PATH"); envTempFolder != "" {
+		a.Server.TempFolder = envTempFolder
 	}
 }
