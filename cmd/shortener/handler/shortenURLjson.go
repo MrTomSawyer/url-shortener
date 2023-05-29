@@ -23,14 +23,15 @@ func (h *Handler) ShortenURLjson(c *gin.Context) {
 	dec := json.NewDecoder(body)
 	if err := dec.Decode(&req); err != nil {
 		c.Writer.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 	if req.URL == "" {
 		c.Writer.WriteHeader(http.StatusBadRequest)
-		return
 	}
 
-	shortenURL := h.services.URL.ShortenURL(req.URL)
+	shortenURL, err := h.services.URL.ShortenURL(req.URL)
+	if err != nil {
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+	}
 
 	res := models.ShortenResponce{
 		Result: shortenURL,

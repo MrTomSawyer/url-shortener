@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
 	"github.com/MrTomSawyer/url-shortener/cmd/shortener/handler"
@@ -15,7 +14,7 @@ func main() {
 	appConfig := config.AppConfig{}
 	appConfig.InitAppConfig()
 	flag.Parse()
-	fmt.Println(appConfig)
+
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
@@ -28,7 +27,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	services := service.NewServiceContainer(repo, appConfig, storage)
+	services, err := service.NewServiceContainer(repo, appConfig, storage)
+	if err != nil {
+		panic(err)
+	}
 	handler := handler.NewHandler(services)
 	server := new(server.Server)
 

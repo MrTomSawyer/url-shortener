@@ -7,38 +7,75 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	m "github.com/MrTomSawyer/url-shortener/internal/models"
 )
 
 type Storage struct {
 	file   *os.File
-	path   string
 	reader bufio.Reader
 	writer bufio.Writer
 }
 
-func (s *Storage) Write(p []byte) (int, error) {
-	data, err := json.Marshal(p)
+func (s *Storage) Write(uj *m.URLJson) error {
+	data, err := json.Marshal(uj)
 	if err != nil {
-		return 0, fmt.Errorf("error marshalling data")
+		return err
 	}
 
-	if _, err := s.writer.Write(p); err != nil {
-		return 0, fmt.Errorf("error writing data")
+	if _, err := s.writer.Write(data); err != nil {
+		return err
 	}
 
 	if err := s.writer.WriteByte('\n'); err != nil {
-		return 0, fmt.Errorf("error writing data")
+		return err
 	}
 
-	return len(data), s.writer.Flush()
+	return s.writer.Flush()
 }
 
-func (s *Storage) Read(p []byte) (int, error) {
-	n, err := io.ReadFull(s.file, p)
+func (s *Storage) Read() (*m.URLJson, error) {
+	data, err := s.reader.ReadBytes('\n')
 	if err != nil {
-		return n, fmt.Errorf("error reading file: %v", err)
+		return nil, err
 	}
-	return n, err
+
+	uj := m.URLJson{}
+	err = json.Unmarshal(data, &uj)
+	if err != nil {
+		return nil, err
+	}
+	return &uj, nil
+}
+
+func (s Storage) LastUUID() (int, error) {
+	largestUUID := 0
+
+	_, err := s.file.Seek(0, 0)
+	if err != nil {
+		return 0, err
+	}
+
+	for {
+		line, err := s.reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return 0, err
+		}
+
+		uj := m.URLJson{}
+		err = json.Unmarshal([]byte(line), &uj)
+		if err != nil {
+			return 0, err
+		}
+
+		if uj.UUID > largestUUID {
+			largestUUID = uj.UUID
+		}
+	}
+	return largestUUID, nil
 }
 
 func NewStorage(path string) (*Storage, error) {
@@ -50,15 +87,13 @@ func NewStorage(path string) (*Storage, error) {
 				return nil, err
 			}
 			filePath := filepath.Join(currentDir, path)
-			file, err := os.Create(filePath)
+			file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 			if err != nil {
 				return nil, fmt.Errorf("error creating file: %v", err)
 			}
-			defer file.Close()
 
 			return &Storage{
 				file:   file,
-				path:   path,
 				reader: *bufio.NewReader(file),
 				writer: *bufio.NewWriter(file),
 			}, nil

@@ -6,15 +6,17 @@ import (
 	"fmt"
 
 	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
+	m "github.com/MrTomSawyer/url-shortener/internal/models"
 )
 
 type urlService struct {
-	repo    map[string]string
-	config  config.AppConfig
-	storage *Storage
+	repo     map[string]string
+	config   config.AppConfig
+	storage  *Storage
+	lastUUID int
 }
 
-func (u *urlService) ShortenURL(body string) string {
+func (u *urlService) ShortenURL(body string) (string, error) {
 	hasher := md5.New()
 	hasher.Write([]byte(body))
 	hash := hex.EncodeToString(hasher.Sum(nil))[:8]
@@ -22,8 +24,19 @@ func (u *urlService) ShortenURL(body string) string {
 	if _, ok := u.repo[hash]; !ok {
 		u.repo[hash] = body
 	}
-	u.storage.Write()
-	return shortURL
+
+	uj := &m.URLJson{
+		UUID:        u.lastUUID,
+		ShortURL:    shortURL,
+		OriginalURL: body,
+	}
+	err := u.storage.Write(uj)
+	if err != nil {
+		fmt.Println("Failed to write data to file", err)
+	}
+	u.lastUUID++
+
+	return shortURL, nil
 }
 
 func (u *urlService) ExpandURL(path string) (string, error) {
@@ -32,4 +45,13 @@ func (u *urlService) ExpandURL(path string) (string, error) {
 	} else {
 		return "", fmt.Errorf("URL path '%s' not found", path)
 	}
+}
+
+func (u *urlService) initializeLastUUID() error {
+	lastUUID, err := u.storage.LastUUID()
+	if err != nil {
+		return err
+	}
+	u.lastUUID = lastUUID
+	return nil
 }

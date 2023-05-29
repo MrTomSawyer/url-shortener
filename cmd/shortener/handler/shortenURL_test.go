@@ -64,9 +64,12 @@ func TestShortenURL(t *testing.T) {
 			с, _ := gin.CreateTestContext(w)
 
 			с.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(test.body))
-
+			serviceContainer, err := service.NewServiceContainer(testVault, appConfig, storage)
+			if err != nil {
+				fmt.Printf("Error creating service container: %v", err)
+			}
 			h := Handler{
-				services: service.NewServiceContainer(testVault, appConfig, storage),
+				services: serviceContainer,
 			}
 			h.ShortenURL(с)
 

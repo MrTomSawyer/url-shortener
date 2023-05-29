@@ -19,16 +19,19 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 
 	data, err := io.ReadAll(body)
 	if err != nil {
-		http.Error(c.Writer, "Error reading request body", http.StatusInternalServerError)
+		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if len(data) == 0 {
-		http.Error(c.Writer, "", http.StatusBadRequest)
+		c.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	bodyStr := string(data)
-	shortURL := h.services.URL.ShortenURL(bodyStr)
+	shortURL, err := h.services.URL.ShortenURL(bodyStr)
+	if err != nil {
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+	}
 
 	c.String(http.StatusCreated, shortURL)
 }
