@@ -25,12 +25,12 @@ func (u *urlService) ShortenURL(body string) (string, error) {
 		u.repo[hash] = body
 	}
 
-	uj := &m.URLJson{
-		UUID:        u.lastUUID,
+	uj := m.URLJson{
+		UUID:        u.lastUUID + 1,
 		ShortURL:    shortURL,
 		OriginalURL: body,
 	}
-	err := u.storage.Write(uj)
+	err := u.storage.Write(&uj)
 	if err != nil {
 		fmt.Println("Failed to write data to file", err)
 	}

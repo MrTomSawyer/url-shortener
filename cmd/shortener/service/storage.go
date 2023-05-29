@@ -84,7 +84,7 @@ func NewStorage(path string) (*Storage, error) {
 		return nil, err
 	}
 	filePath := filepath.Join(currentDir, path)
-	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	file, err := os.OpenFile(filePath, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("error creating file: %v", err)
 	}
