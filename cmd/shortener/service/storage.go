@@ -23,7 +23,7 @@ func (s *Storage) Write(uj *m.URLJson) error {
 	filePath := filepath.Join(currentDir, s.path)
 	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
-		return fmt.Errorf("error opening file: %v", err)
+		return fmt.Errorf("error opening file to write: %v", err)
 	}
 	defer file.Close()
 
@@ -56,7 +56,7 @@ func (s *Storage) Read(repo *map[string]string) error {
 	filePath := filepath.Join(currentDir, s.path)
 	file, err := os.OpenFile(filePath, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
-		return fmt.Errorf("error opening file: %v", err)
+		return fmt.Errorf("error opening file to read: %v", err)
 	}
 	defer file.Close()
 
@@ -82,7 +82,7 @@ func (s Storage) LastUUID() (int, error) {
 	filePath := filepath.Join(currentDir, s.path)
 	file, err := os.OpenFile(filePath, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
-		return 0, fmt.Errorf("error opening file: %v", err)
+		return 0, fmt.Errorf("error opening file to get UUID: %v", err)
 	}
 	defer file.Close()
 
@@ -111,10 +111,15 @@ func (s Storage) LastUUID() (int, error) {
 
 func NewStorage(path string) (*Storage, error) {
 	// TODO переделать этот ужасный костыль. Буду рад совету как лучше это сделать
-	dirPath := "./tmp"
-	_, err := os.Stat(dirPath)
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("error getting current dir: %v", err)
+	}
+
+	filePath := filepath.Join(currentDir, path)
+	_, err = os.Stat(filePath)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(dirPath, 0755)
+		err := os.MkdirAll(filepath.Dir(filePath), 0755)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create /tmp dir")
 		}
