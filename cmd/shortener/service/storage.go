@@ -99,6 +99,21 @@ func (s Storage) LastUUID() (int, error) {
 }
 
 func NewStorage(path string) (*Storage, error) {
+	dirPath := "./tmp/"
+	_, err := os.Stat(dirPath)
+	if os.IsNotExist(err) {
+		err := os.Mkdir(dirPath, 0755)
+		if err != nil {
+			fmt.Printf("Failed to create directory: %s\n", err)
+			return nil, err
+		}
+	} else if err == os.ErrExist {
+		fmt.Printf("Directory already exists: %s\n", dirPath)
+	} else if err != nil {
+		fmt.Printf("Failed to check directory: %s\n", err)
+		return nil, err
+	}
+
 	currentDir, err := os.Getwd()
 	if err != nil {
 		return nil, err

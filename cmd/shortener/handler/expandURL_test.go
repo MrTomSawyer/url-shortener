@@ -13,12 +13,15 @@ import (
 )
 
 func TestExpandURL(t *testing.T) {
-	appConfig := config.AppConfig{}
-	appConfig.InitAppConfig()
+	cfg := config.AppConfig{}
+	cfg.Server.DefaultAddr = "http://localhost:8080"
+	cfg.Server.ServerAddr = ":8080"
+	cfg.Server.TempFolder = "/tmp/short-url-db.json"
+
 	var testVault = map[string]string{"e9db20b2": "https://yandex.ru"}
-	storage, err := service.NewStorage(appConfig.Server.TempFolder)
+	storage, err := service.NewStorage(cfg.Server.TempFolder)
 	if err != nil {
-		fmt.Println("Error creating test storage")
+		fmt.Printf("Error creating test storage: %v", err)
 	}
 
 	type want struct {
@@ -63,7 +66,7 @@ func TestExpandURL(t *testing.T) {
 			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(""))
 			c.AddParam("id", test.id)
 
-			serviceContainer, err := service.NewServiceContainer(testVault, appConfig, storage)
+			serviceContainer, err := service.NewServiceContainer(testVault, cfg, storage)
 			if err != nil {
 				fmt.Printf("Error creating service container: %v", err)
 			}

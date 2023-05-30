@@ -1,11 +1,9 @@
 package handler
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
@@ -16,13 +14,15 @@ import (
 )
 
 func TestShortenURLjson(t *testing.T) {
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	appConfig := config.AppConfig{}
-	appConfig.InitAppConfig()
+	cfg := config.AppConfig{}
+	cfg.Server.DefaultAddr = "http://localhost:8080"
+	cfg.Server.ServerAddr = ":8080"
+	cfg.Server.TempFolder = "/tmp/short-url-db.json"
+
 	testVault := make(map[string]string)
-	storage, err := service.NewStorage(appConfig.Server.TempFolder)
+	storage, err := service.NewStorage(cfg.Server.TempFolder)
 	if err != nil {
-		fmt.Println("Error creating test storage")
+		fmt.Printf("Error creating test storage: %v", err)
 	}
 	type want struct {
 		code     int
@@ -73,7 +73,7 @@ func TestShortenURLjson(t *testing.T) {
 			}
 
 			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(string(bodyStr)))
-			serviceContainer, err := service.NewServiceContainer(testVault, appConfig, storage)
+			serviceContainer, err := service.NewServiceContainer(testVault, cfg, storage)
 			if err != nil {
 				fmt.Printf("Error creating service container: %v", err)
 			}
