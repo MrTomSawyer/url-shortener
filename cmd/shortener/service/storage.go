@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 
 	m "github.com/MrTomSawyer/url-shortener/internal/models"
@@ -68,8 +70,15 @@ func (s *Storage) Read(repo *map[string]string) error {
 		if err != nil {
 			return fmt.Errorf("error parsing line: %v", err)
 		}
-		(*repo)[uj.ShortURL] = uj.OriginalURL
+
+		url, err := url.Parse(uj.ShortURL)
+		if err != nil {
+			panic(err)
+		}
+		shortURL := path.Base(url.Path)
+		(*repo)[shortURL] = uj.OriginalURL
 	}
+
 	return nil
 }
 
