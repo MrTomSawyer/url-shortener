@@ -18,13 +18,11 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 	}(body)
 
 	data, err := io.ReadAll(body)
-	fmt.Printf("EEEEEEERRRRRRR: %v %v\n", string(data) == "", len(data) == 0)
 	if err != nil {
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if string(data) == "" {
-		fmt.Printf("fail 212121212121")
 		c.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}

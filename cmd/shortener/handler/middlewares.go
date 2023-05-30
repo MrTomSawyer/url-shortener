@@ -23,7 +23,7 @@ func (h *Handler) logReqResInfo(lg logger) gin.HandlerFunc {
 
 func (h *Handler) decompressData() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		decompressTypes := [2]string{"application/json", "text/html"}
+		decompressTypes := [2]string{"application/json", "text/plain"}
 		if c.Request.Header.Get("Content-Encoding") != "gzip" {
 			c.Next()
 			return
@@ -34,15 +34,16 @@ func (h *Handler) decompressData() gin.HandlerFunc {
 		for _, val := range decompressTypes {
 			if val == contentType {
 				isCorrectType = true
+				break
 			}
 		}
 		if !isCorrectType {
 			c.Next()
 			return
 		}
-
 		var buffer bytes.Buffer
 		gzipReader, err := gzip.NewReader(c.Request.Body)
+
 		if err != nil {
 			c.Writer.WriteHeader(http.StatusInternalServerError)
 			return
