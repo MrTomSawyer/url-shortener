@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/MrTomSawyer/url-shortener/internal/models"
 	m "github.com/MrTomSawyer/url-shortener/internal/models"
 )
 
@@ -64,7 +63,7 @@ func (s *Storage) Read(repo *map[string]string) error {
 	fileScanner := bufio.NewScanner(file)
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
-		var uj models.URLJson
+		var uj m.URLJson
 		err := json.Unmarshal([]byte(line), &uj)
 		if err != nil {
 			return fmt.Errorf("error parsing line: %v", err)
@@ -92,7 +91,7 @@ func (s Storage) LastUUID() (int, error) {
 	fileScanner := bufio.NewScanner(file)
 	for fileScanner.Scan() {
 		line := fileScanner.Bytes()
-		var uj models.URLJson
+		var uj m.URLJson
 		err := json.Unmarshal(line, &uj)
 		if err != nil {
 			return 0, fmt.Errorf("error parsing line: %v", err)
