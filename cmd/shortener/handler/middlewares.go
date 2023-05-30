@@ -1,10 +1,8 @@
 package handler
 
 import (
-	"bytes"
 	"compress/gzip"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -41,11 +39,11 @@ func (h *Handler) decompressData() gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		var buffer bytes.Buffer
+
 		gzipReader, err := gzip.NewReader(c.Request.Body)
 
 		if err != nil {
-			c.Writer.WriteHeader(http.StatusInternalServerError)
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -56,13 +54,12 @@ func (h *Handler) decompressData() gin.HandlerFunc {
 			}
 		}()
 
-		_, err = buffer.ReadFrom(gzipReader)
 		if err != nil {
 			c.Writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		c.Request.Body = io.NopCloser(&buffer)
+		c.Request.Body = http.MaxBytesReader(c.Writer, gzipReader, c.Request.ContentLength)
 		c.Next()
 	}
 }
