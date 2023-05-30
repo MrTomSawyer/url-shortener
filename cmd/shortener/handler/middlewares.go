@@ -54,11 +54,6 @@ func (h *Handler) decompressData() gin.HandlerFunc {
 			}
 		}()
 
-		if err != nil {
-			c.Writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
 		c.Request.Body = http.MaxBytesReader(c.Writer, gzipReader, c.Request.ContentLength)
 		c.Next()
 	}
