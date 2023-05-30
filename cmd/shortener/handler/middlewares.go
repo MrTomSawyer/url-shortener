@@ -1,11 +1,8 @@
 package handler
 
 import (
-	"bytes"
-	"compress/gzip"
-	"fmt"
-	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,46 +18,34 @@ func (h *Handler) logReqResInfo(lg logger) gin.HandlerFunc {
 	}
 }
 
-func (h *Handler) decompressData() gin.HandlerFunc {
+func (h *Handler) DataCompressor() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		decompressTypes := [2]string{"application/json", "text/plain"}
-		if c.Request.Header.Get("Content-Encoding") != "gzip" {
-			c.Next()
-			return
-		}
-
-		isCorrectType := false
-		contentType := c.Request.Header.Get("Content-Type")
-		for _, val := range decompressTypes {
-			if val == contentType {
-				isCorrectType = true
-				break
-			}
-		}
-		if !isCorrectType {
-			c.Next()
-			return
-		}
-
-		gzipReader, err := gzip.NewReader(c.Request.Body)
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		defer func() {
-			err := gzipReader.Close()
+		// Принимаем запросы в сжатом формате
+		encoding := c.GetHeader("Content-Encoding")
+		if strings.Contains(encoding, "gzip") {
+			compressReader, err := newCompressReader(c.Request.Body)
 			if err != nil {
-				fmt.Println("Failed to close gzip reader", err)
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
 			}
-		}()
-
-		body, err := io.ReadAll(gzipReader)
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
+			defer compressReader.Close()
+			c.Request.Body = compressReader
 		}
 
-		c.Request.Body = io.NopCloser(bytes.NewReader(body))
-		c.Next()
+		acceptEncoding := c.GetHeader("Accept-Encoding")
+		supportsGzip := strings.Contains(acceptEncoding, "gzip")
+		if supportsGzip {
+			switch c.Writer.Header().Get("Content-Type") {
+			case "application/json", "text/html":
+				compressWriter := newCompressWriter(c.Writer)
+				compressWriter.writer.Header().Set("Content-Type", "gzip")
+				defer compressWriter.Close()
+			}
+			// Продолжаем обработку запроса
+			c.Next()
+		} else {
+			// Клиент не поддерживает сжатие, просто продолжаем обработку запроса
+			c.Next()
+		}
 	}
 }
