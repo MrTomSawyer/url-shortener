@@ -23,7 +23,11 @@ func main() {
 	sugar := logger.Sugar()
 
 	repo := make(map[string]string)
-	storage := service.NewStorage(appConfig.Server.TempFolder)
+
+	storage, err := service.NewStorage(appConfig.Server.TempFolder)
+	if err != nil {
+		panic(err)
+	}
 
 	err = storage.Read(&repo)
 	if err != nil {

@@ -109,8 +109,17 @@ func (s Storage) LastUUID() (int, error) {
 	return largestUUID, nil
 }
 
-func NewStorage(path string) *Storage {
+func NewStorage(path string) (*Storage, error) {
+	// TODO переделать этот ужасный костыль. Буду рад совету как лучше это сделать
+	dirPath := "./tmp"
+	_, err := os.Stat(dirPath)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(dirPath, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create /tmp dir")
+		}
+	}
 	return &Storage{
 		path: path,
-	}
+	}, nil
 }

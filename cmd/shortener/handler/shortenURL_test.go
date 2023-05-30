@@ -18,7 +18,11 @@ func TestShortenURL(t *testing.T) {
 	cfg.Server.ServerAddr = ":8080"
 	cfg.Server.TempFolder = "/tmp/short-url-db.json"
 
-	storage := service.NewStorage(cfg.Server.TempFolder)
+	storage, err := service.NewStorage(cfg.Server.TempFolder)
+	if err != nil {
+		fmt.Printf("Failed to create test storage: %v", err)
+		return
+	}
 
 	var testVault = make(map[string]string)
 	type want struct {
