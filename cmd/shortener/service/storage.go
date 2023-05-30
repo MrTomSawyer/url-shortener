@@ -4,129 +4,114 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 
+	"github.com/MrTomSawyer/url-shortener/internal/models"
 	m "github.com/MrTomSawyer/url-shortener/internal/models"
 )
 
 type Storage struct {
-	file   *os.File
-	reader bufio.Reader
-	writer bufio.Writer
+	path string
 }
 
 func (s *Storage) Write(uj *m.URLJson) error {
-	data, err := json.Marshal(uj)
+	currentDir, err := os.Getwd()
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting current dir: %v", err)
 	}
 
-	if _, err := s.writer.Write(data); err != nil {
-		return err
+	filePath := filepath.Join(currentDir, s.path)
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		return fmt.Errorf("error opening file: %v", err)
+	}
+	defer file.Close()
+
+	fileWriter := bufio.NewWriter(file)
+	defer fileWriter.Flush()
+
+	parsedURLJSON, err := json.Marshal(uj)
+	if err != nil {
+		return fmt.Errorf("error parsing data: %v", err)
 	}
 
-	if err := s.writer.WriteByte('\n'); err != nil {
-		return err
+	_, err = fileWriter.Write(parsedURLJSON)
+	if err != nil {
+		return fmt.Errorf("error writing data to file: %v", err)
 	}
 
-	return s.writer.Flush()
+	_, err = fileWriter.WriteString("\n")
+	if err != nil {
+		return fmt.Errorf("error writing a byte: %v", err)
+	}
+
+	return nil
 }
 
 func (s *Storage) Read(repo *map[string]string) error {
-	_, err := s.file.Seek(0, 0)
+	currentDir, err := os.Getwd()
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting current dir: %v", err)
 	}
+	filePath := filepath.Join(currentDir, s.path)
+	file, err := os.OpenFile(filePath, os.O_RDONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return fmt.Errorf("error opening file: %v", err)
+	}
+	defer file.Close()
 
-	for {
-		line, err := s.reader.ReadString('\n')
+	fileScanner := bufio.NewScanner(file)
+	for fileScanner.Scan() {
+		line := fileScanner.Text()
+		var uj models.URLJson
+		err := json.Unmarshal([]byte(line), &uj)
 		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return err
+			return fmt.Errorf("error parsing line: %v", err)
 		}
-
-		uj := m.URLJson{}
-		err = json.Unmarshal([]byte(line), &uj)
-		if err != nil {
-			return err
-		}
-
-		u, err := url.Parse(uj.ShortURL)
-		if err != nil {
-			return err
-		}
-
-		trimmedPath := strings.TrimLeft(u.Path, "/")
-		(*repo)[trimmedPath] = uj.OriginalURL
+		(*repo)[uj.ShortURL] = uj.OriginalURL
 	}
 	return nil
 }
 
 func (s Storage) LastUUID() (int, error) {
-	largestUUID := 0
-
-	_, err := s.file.Seek(0, 0)
+	currentDir, err := os.Getwd()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("error getting current dir: %v", err)
 	}
 
-	for {
-		line, err := s.reader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return 0, err
-		}
+	filePath := filepath.Join(currentDir, s.path)
+	file, err := os.OpenFile(filePath, os.O_RDONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return 0, fmt.Errorf("error opening file: %v", err)
+	}
+	defer file.Close()
 
-		uj := m.URLJson{}
-		err = json.Unmarshal([]byte(line), &uj)
+	var largestUUID int
+
+	fileScanner := bufio.NewScanner(file)
+	for fileScanner.Scan() {
+		line := fileScanner.Bytes()
+		var uj models.URLJson
+		err := json.Unmarshal(line, &uj)
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("error parsing line: %v", err)
 		}
 
 		if uj.UUID > largestUUID {
 			largestUUID = uj.UUID
 		}
 	}
+
+	if err := fileScanner.Err(); err != nil {
+		return 0, fmt.Errorf("error scanning file: %v", err)
+	}
+
 	return largestUUID, nil
 }
 
-func NewStorage(path string) (*Storage, error) {
-	dirPath := "./tmp/"
-	_, err := os.Stat(dirPath)
-	if os.IsNotExist(err) {
-		err := os.Mkdir(dirPath, 0755)
-		if err != nil {
-			fmt.Printf("Failed to create directory: %s\n", err)
-			return nil, err
-		}
-	} else if err == os.ErrExist {
-		fmt.Printf("Directory already exists: %s\n", dirPath)
-	} else if err != nil {
-		fmt.Printf("Failed to check directory: %s\n", err)
-		return nil, err
-	}
-
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	filePath := filepath.Join(currentDir, path)
-	file, err := os.OpenFile(filePath, os.O_RDONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return nil, fmt.Errorf("error creating file: %v", err)
-	}
-
+func NewStorage(path string) *Storage {
 	return &Storage{
-		file:   file,
-		reader: *bufio.NewReader(file),
-		writer: *bufio.NewWriter(file),
-	}, nil
+		path: path,
+	}
 }

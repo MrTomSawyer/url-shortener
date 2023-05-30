@@ -20,10 +20,8 @@ func TestShortenURLjson(t *testing.T) {
 	cfg.Server.TempFolder = "/tmp/short-url-db.json"
 
 	testVault := make(map[string]string)
-	storage, err := service.NewStorage(cfg.Server.TempFolder)
-	if err != nil {
-		fmt.Printf("Error creating test storage: %v", err)
-	}
+	storage := service.NewStorage(cfg.Server.TempFolder)
+
 	type want struct {
 		code     int
 		response map[string]string

@@ -19,10 +19,7 @@ func TestExpandURL(t *testing.T) {
 	cfg.Server.TempFolder = "/tmp/short-url-db.json"
 
 	var testVault = map[string]string{"e9db20b2": "https://yandex.ru"}
-	storage, err := service.NewStorage(cfg.Server.TempFolder)
-	if err != nil {
-		fmt.Printf("Error creating test storage: %v", err)
-	}
+	storage := service.NewStorage(cfg.Server.TempFolder)
 
 	type want struct {
 		code     int
