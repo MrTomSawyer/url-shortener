@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"compress/gzip"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -20,16 +23,20 @@ func (h *Handler) logReqResInfo(lg logger) gin.HandlerFunc {
 
 func (h *Handler) DataCompressor() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Принимаем запросы в сжатом формате
-		encoding := c.GetHeader("Content-Encoding")
+		encoding := c.Request.Header.Get("Content-Encoding")
+
 		if strings.Contains(encoding, "gzip") {
-			compressReader, err := newCompressReader(c.Request.Body)
+			gzipBodyReader, err := newGzipBodyReader(c.Request.Body)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				c.AbortWithError(http.StatusBadRequest, err)
 				return
 			}
-			defer compressReader.Close()
-			c.Request.Body = compressReader
+			defer func() {
+				if err := gzipBodyReader.Close(); err != nil {
+					fmt.Printf("Failed to close gzip body reader: %v", err)
+				}
+			}()
+			c.Request.Body = gzipBodyReader
 		}
 
 		acceptEncoding := c.GetHeader("Accept-Encoding")
@@ -37,15 +44,67 @@ func (h *Handler) DataCompressor() gin.HandlerFunc {
 		if supportsGzip {
 			switch c.Writer.Header().Get("Content-Type") {
 			case "application/json", "text/html":
-				compressWriter := newCompressWriter(c.Writer)
+				compressWriter := newGzipBodyWriter(c.Writer)
 				compressWriter.writer.Header().Set("Content-Type", "gzip")
-				defer compressWriter.Close()
+				defer func() {
+					if err := compressWriter.Close(); err != nil {
+						fmt.Printf("Failed to close gzip body reader: %v", err)
+					}
+				}()
 			}
-			// Продолжаем обработку запроса
 			c.Next()
 		} else {
-			// Клиент не поддерживает сжатие, просто продолжаем обработку запроса
 			c.Next()
 		}
+	}
+}
+
+type gzipBodyReader struct {
+	reader     io.ReadCloser
+	gzipReader *gzip.Reader
+}
+
+func (g *gzipBodyReader) Read(p []byte) (n int, err error) {
+	return g.gzipReader.Read(p)
+}
+
+func (g *gzipBodyReader) Close() error {
+	if err := g.reader.Close(); err != nil {
+		return err
+	}
+	if err := g.gzipReader.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func newGzipBodyReader(body io.ReadCloser) (*gzipBodyReader, error) {
+	gzipReader, err := gzip.NewReader(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gzipBodyReader{
+		reader:     body,
+		gzipReader: gzipReader,
+	}, nil
+}
+
+type gzipBodyWriter struct {
+	writer     http.ResponseWriter
+	gzipWriter *gzip.Writer
+}
+
+func (c *gzipBodyWriter) Close() error {
+	if err := c.gzipWriter.Close(); err != nil {
+		fmt.Printf("Failed to close gzip body writer: %v", err)
+	}
+	return nil
+}
+
+func newGzipBodyWriter(w http.ResponseWriter) *gzipBodyWriter {
+	return &gzipBodyWriter{
+		writer:     w,
+		gzipWriter: gzip.NewWriter(w),
 	}
 }

@@ -101,7 +101,6 @@ func (s Storage) LastUUID() (int, error) {
 }
 
 func NewStorage(path string) (*Storage, error) {
-	// TODO переделать этот ужасный костыль. Буду рад совету как лучше это сделать
 	file, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
