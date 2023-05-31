@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"path/filepath"
 
 	m "github.com/MrTomSawyer/url-shortener/internal/models"
 )
@@ -103,14 +102,12 @@ func (s Storage) LastUUID() (int, error) {
 
 func NewStorage(path string) (*Storage, error) {
 	// TODO переделать этот ужасный костыль. Буду рад совету как лучше это сделать
-	_, err := os.Stat(path)
-	fmt.Println(path)
-	if os.IsNotExist(err) {
-		err := os.Mkdir(filepath.Dir(path), 0777)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create /tmp dir: %v", err)
-		}
+	file, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return nil, err
 	}
+	defer file.Close()
+
 	return &Storage{
 		path: path,
 	}, nil
