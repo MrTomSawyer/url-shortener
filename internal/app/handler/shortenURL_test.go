@@ -7,24 +7,24 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/service"
+	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 	"github.com/gin-gonic/gin"
 )
 
-func TestExpandURL(t *testing.T) {
+func TestShortenURL(t *testing.T) {
 	cfg := config.AppConfig{}
 	cfg.Server.DefaultAddr = "http://localhost:8080"
 	cfg.Server.ServerAddr = ":8080"
 	cfg.Server.TempFolder = "/tmp/short-url-db.json"
 
-	var testVault = map[string]string{"e9db20b2": "https://yandex.ru"}
 	storage, err := service.NewStorage(cfg.Server.TempFolder)
 	if err != nil {
 		fmt.Printf("Failed to create test storage: %v", err)
 		return
 	}
 
+	var testVault = make(map[string]string)
 	type want struct {
 		code     int
 		response string
@@ -33,27 +33,27 @@ func TestExpandURL(t *testing.T) {
 	tests := []struct {
 		name   string
 		url    string
-		id     string
 		method string
+		body   string
 		want   want
 	}{
 		{
-			name:   "Test #3 - Get Original URL",
+			name:   "Test #1 - Regular URL",
 			url:    "http://localhost:8080",
-			id:     "e9db20b2",
-			method: "GET",
+			method: "POST",
+			body:   "https://yandex.ru",
 			want: want{
-				code:     307,
-				response: "https://yandex.ru",
+				code:     201,
+				response: "http://localhost:8080/e9db20b2",
 			},
 		},
 		{
-			name:   "Test #4 - Wrong code",
+			name:   "Test #2 - Empty Body",
 			url:    "http://localhost:8080",
-			id:     "fff",
-			method: "GET",
+			method: "POST",
+			body:   "",
 			want: want{
-				code:     404,
+				code:     400,
 				response: "",
 			},
 		},
@@ -62,11 +62,9 @@ func TestExpandURL(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
+			с, _ := gin.CreateTestContext(w)
 
-			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(""))
-			c.AddParam("id", test.id)
-
+			с.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(test.body))
 			serviceContainer, err := service.NewServiceContainer(testVault, cfg, storage)
 			if err != nil {
 				fmt.Printf("Error creating service container: %v", err)
@@ -74,12 +72,14 @@ func TestExpandURL(t *testing.T) {
 			h := Handler{
 				services: serviceContainer,
 			}
-			h.ExpandURL(c)
-			if c.Writer.Status() != test.want.code {
+			h.ShortenURL(с)
+
+			if с.Writer.Status() != test.want.code {
 				t.Errorf("got status code %d, want %d", w.Code, test.want.code)
 			}
-			if location := w.Header().Get("Location"); location != test.want.response {
-				t.Errorf("got location header %s, want %s", location, test.want.response)
+
+			if body := strings.TrimSpace(w.Body.String()); body != test.want.response {
+				t.Errorf("got response body '%s', want '%s'", body, test.want.response)
 			}
 		})
 	}

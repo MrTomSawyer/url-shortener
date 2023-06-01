@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 )
 
 type ServiceContainer struct {

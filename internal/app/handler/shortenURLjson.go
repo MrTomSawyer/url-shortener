@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/MrTomSawyer/url-shortener/internal/models"
+	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"github.com/gin-gonic/gin"
 )
 

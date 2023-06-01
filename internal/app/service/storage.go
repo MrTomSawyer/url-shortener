@@ -8,14 +8,14 @@ import (
 	"os"
 	"path"
 
-	m "github.com/MrTomSawyer/url-shortener/internal/models"
+	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 )
 
 type Storage struct {
 	path string
 }
 
-func (s *Storage) Write(uj *m.URLJson) error {
+func (s *Storage) Write(uj *models.URLJson) error {
 	file, err := os.OpenFile(s.path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		return fmt.Errorf("error opening file to write: %v", err)
@@ -53,7 +53,7 @@ func (s *Storage) Read(repo *map[string]string) error {
 	fileScanner := bufio.NewScanner(file)
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
-		var uj m.URLJson
+		var uj models.URLJson
 		err := json.Unmarshal([]byte(line), &uj)
 		if err != nil {
 			return fmt.Errorf("error parsing line: %v", err)
@@ -82,7 +82,7 @@ func (s Storage) LastUUID() (int, error) {
 	fileScanner := bufio.NewScanner(file)
 	for fileScanner.Scan() {
 		line := fileScanner.Bytes()
-		var uj m.URLJson
+		var uj models.URLJson
 		err := json.Unmarshal(line, &uj)
 		if err != nil {
 			return 0, fmt.Errorf("error parsing line: %v", err)

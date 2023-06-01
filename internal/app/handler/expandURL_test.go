@@ -7,19 +7,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/service"
+	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
 )
 
-func TestShortenURLjson(t *testing.T) {
+func TestExpandURL(t *testing.T) {
 	cfg := config.AppConfig{}
 	cfg.Server.DefaultAddr = "http://localhost:8080"
 	cfg.Server.ServerAddr = ":8080"
 	cfg.Server.TempFolder = "/tmp/short-url-db.json"
 
-	testVault := make(map[string]string)
+	var testVault = map[string]string{"e9db20b2": "https://yandex.ru"}
 	storage, err := service.NewStorage(cfg.Server.TempFolder)
 	if err != nil {
 		fmt.Printf("Failed to create test storage: %v", err)
@@ -28,38 +27,34 @@ func TestShortenURLjson(t *testing.T) {
 
 	type want struct {
 		code     int
-		response map[string]string
+		response string
 	}
 
 	tests := []struct {
 		name   string
 		url    string
+		id     string
 		method string
-		body   map[string]string
 		want   want
 	}{
 		{
-			name:   "Test #1 - Regular URL",
+			name:   "Test #3 - Get Original URL",
 			url:    "http://localhost:8080",
-			method: "POST",
-			body: map[string]string{
-				"url": "https://yandex.ru",
-			},
+			id:     "e9db20b2",
+			method: "GET",
 			want: want{
-				code: 201,
-				response: map[string]string{
-					"result": "http://localhost:8080/e9db20b2",
-				},
+				code:     307,
+				response: "https://yandex.ru",
 			},
 		},
 		{
-			name:   "Test #2 - Empty Body",
+			name:   "Test #4 - Wrong code",
 			url:    "http://localhost:8080",
-			method: "POST",
-			body:   map[string]string{},
+			id:     "fff",
+			method: "GET",
 			want: want{
-				code:     400,
-				response: map[string]string{},
+				code:     404,
+				response: "",
 			},
 		},
 	}
@@ -69,12 +64,9 @@ func TestShortenURLjson(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 
-			bodyStr, err := json.Marshal(test.body)
-			if err != nil {
-				fmt.Println("Error marshalling body:", err)
-			}
+			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(""))
+			c.AddParam("id", test.id)
 
-			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(string(bodyStr)))
 			serviceContainer, err := service.NewServiceContainer(testVault, cfg, storage)
 			if err != nil {
 				fmt.Printf("Error creating service container: %v", err)
@@ -82,10 +74,12 @@ func TestShortenURLjson(t *testing.T) {
 			h := Handler{
 				services: serviceContainer,
 			}
-			h.ShortenURLjson(c)
-
+			h.ExpandURL(c)
 			if c.Writer.Status() != test.want.code {
 				t.Errorf("got status code %d, want %d", w.Code, test.want.code)
+			}
+			if location := w.Header().Get("Location"); location != test.want.response {
+				t.Errorf("got location header %s, want %s", location, test.want.response)
 			}
 		})
 	}

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
-	m "github.com/MrTomSawyer/url-shortener/internal/models"
+	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 )
 
 type urlService struct {
@@ -39,7 +39,7 @@ func (u *urlService) ShortenURL(body string) (string, error) {
 		}
 	}
 
-	uj := m.URLJson{
+	uj := models.URLJson{
 		UUID:        u.lastUUID + 1,
 		ShortURL:    shortURL,
 		OriginalURL: body,

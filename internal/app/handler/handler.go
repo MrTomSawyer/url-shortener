@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/service"
+	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 	"github.com/gin-gonic/gin"
 )
 

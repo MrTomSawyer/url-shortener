@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/handler"
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/server"
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/service"
+	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/handler"
+	"github.com/MrTomSawyer/url-shortener/internal/app/server"
+	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 	"go.uber.org/zap"
 )
 
