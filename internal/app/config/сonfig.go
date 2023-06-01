@@ -8,9 +8,9 @@ import (
 
 type AppConfig struct {
 	Server struct {
-		DefaultAddr string
-		ServerAddr  string
-		TempFolder  string
+		DefaultAddr string `env:"BASE_URL"`
+		ServerAddr  string `env:"SERVER_ADDRESS"`
+		TempFolder  string `env:"FILE_STORAGE_PATH"`
 	}
 }
 
@@ -20,7 +20,7 @@ func (a *AppConfig) InitAppConfig() error {
 	flag.StringVar(&a.Server.TempFolder, "f", "/tmp/short-url-db.json", "default temp data storage path and filename")
 	flag.Parse()
 
-	err := env.Parse(a.Server)
+	err := env.Parse(a)
 	if err != nil {
 		return err
 	}
