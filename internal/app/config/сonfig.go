@@ -20,7 +20,7 @@ func (a *AppConfig) InitAppConfig() error {
 	flag.StringVar(&a.Server.TempFolder, "f", "/tmp/short-url-db.json", "default temp data storage path and filename")
 	flag.Parse()
 
-	err := env.Parse(a)
+	err := env.Parse(a.Server)
 	if err != nil {
 		return err
 	}
