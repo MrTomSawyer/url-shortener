@@ -1,8 +1,6 @@
 package service
 
 import (
-	"fmt"
-
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 )
 
@@ -15,10 +13,6 @@ func NewServiceContainer(repo map[string]string, config config.AppConfig, storag
 		repo:    repo,
 		config:  config,
 		storage: storage,
-	}
-	err := URLService.initializeLastUUID()
-	if err != nil {
-		return nil, fmt.Errorf("failed to init UUID: %v", err)
 	}
 
 	return &ServiceContainer{

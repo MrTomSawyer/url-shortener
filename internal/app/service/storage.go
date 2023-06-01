@@ -12,7 +12,8 @@ import (
 )
 
 type Storage struct {
-	path string
+	path        string
+	largestUUID int
 }
 
 func (s *Storage) Write(uj *models.URLJson) error {
@@ -50,6 +51,7 @@ func (s *Storage) Read(repo *map[string]string) error {
 	}
 	defer file.Close()
 
+	var largestUUID int
 	fileScanner := bufio.NewScanner(file)
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
@@ -65,39 +67,15 @@ func (s *Storage) Read(repo *map[string]string) error {
 		}
 		shortURL := path.Base(url.Path)
 		(*repo)[shortURL] = uj.OriginalURL
-	}
-
-	return nil
-}
-
-func (s Storage) LastUUID() (int, error) {
-	file, err := os.OpenFile(s.path, os.O_RDONLY|os.O_CREATE, 0777)
-	if err != nil {
-		return 0, fmt.Errorf("error opening file to get UUID: %v", err)
-	}
-	defer file.Close()
-
-	var largestUUID int
-
-	fileScanner := bufio.NewScanner(file)
-	for fileScanner.Scan() {
-		line := fileScanner.Bytes()
-		var uj models.URLJson
-		err := json.Unmarshal(line, &uj)
-		if err != nil {
-			return 0, fmt.Errorf("error parsing line: %v", err)
-		}
 
 		if uj.UUID > largestUUID {
 			largestUUID = uj.UUID
 		}
+
+		s.largestUUID = largestUUID
 	}
 
-	if err := fileScanner.Err(); err != nil {
-		return 0, fmt.Errorf("error scanning file: %v", err)
-	}
-
-	return largestUUID, nil
+	return nil
 }
 
 func NewStorage(path string) (*Storage, error) {

@@ -11,10 +11,9 @@ import (
 )
 
 type urlService struct {
-	repo     map[string]string
-	config   config.AppConfig
-	storage  *Storage
-	lastUUID int
+	repo    map[string]string
+	config  config.AppConfig
+	storage *Storage
 }
 
 func (u *urlService) ShortenURL(body string) (string, error) {
@@ -40,7 +39,7 @@ func (u *urlService) ShortenURL(body string) (string, error) {
 	}
 
 	uj := models.URLJson{
-		UUID:        u.lastUUID + 1,
+		UUID:        u.storage.largestUUID + 1,
 		ShortURL:    shortURL,
 		OriginalURL: body,
 	}
@@ -48,7 +47,7 @@ func (u *urlService) ShortenURL(body string) (string, error) {
 	if err != nil {
 		fmt.Println("Failed to write data to file", err)
 	}
-	u.lastUUID++
+	u.storage.largestUUID++
 
 	return shortURL, nil
 }
@@ -59,13 +58,4 @@ func (u *urlService) ExpandURL(path string) (string, error) {
 	} else {
 		return "", fmt.Errorf("URL path '%s' not found", path)
 	}
-}
-
-func (u *urlService) initializeLastUUID() error {
-	lastUUID, err := u.storage.LastUUID()
-	if err != nil {
-		return err
-	}
-	u.lastUUID = lastUUID
-	return nil
 }
