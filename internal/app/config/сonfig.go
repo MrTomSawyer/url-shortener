@@ -2,7 +2,8 @@ package config
 
 import (
 	"flag"
-	"os"
+
+	"github.com/caarlos0/env/v6"
 )
 
 type AppConfig struct {
@@ -13,18 +14,15 @@ type AppConfig struct {
 	}
 }
 
-func (a *AppConfig) InitAppConfig() {
+func (a *AppConfig) InitAppConfig() error {
 	flag.StringVar(&a.Server.ServerAddr, "a", ":8080", "address and port to run server")
 	flag.StringVar(&a.Server.DefaultAddr, "b", "http://localhost:8080", "default address and port of a shortened URL")
 	flag.StringVar(&a.Server.TempFolder, "f", "/tmp/short-url-db.json", "default temp data storage path and filename")
+	flag.Parse()
 
-	if envServerAddr := os.Getenv("SERVER_ADDRESS"); envServerAddr != "" {
-		a.Server.ServerAddr = envServerAddr
+	err := env.Parse(a)
+	if err != nil {
+		return err
 	}
-	if envDefaultAddr := os.Getenv("BASE_URL"); envDefaultAddr != "" {
-		a.Server.DefaultAddr = envDefaultAddr
-	}
-	if envTempFolder := os.Getenv("FILE_STORAGE_PATH"); envTempFolder != "" {
-		a.Server.TempFolder = envTempFolder
-	}
+	return nil
 }

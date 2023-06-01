@@ -1,8 +1,6 @@
 package main
 
 import (
-	"flag"
-
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/handler"
 	"github.com/MrTomSawyer/url-shortener/internal/app/server"
@@ -12,8 +10,10 @@ import (
 
 func main() {
 	appConfig := config.AppConfig{}
-	appConfig.InitAppConfig()
-	flag.Parse()
+	err := appConfig.InitAppConfig()
+	if err != nil {
+		panic(err)
+	}
 
 	logger, err := zap.NewDevelopment()
 	if err != nil {
