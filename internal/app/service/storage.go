@@ -79,11 +79,10 @@ func (s *Storage) Read(repo *map[string]string) error {
 }
 
 func NewStorage(path string) (*Storage, error) {
-	file, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0644)
+	_, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
 	return &Storage{
 		path: path,
