@@ -54,9 +54,9 @@ func (s *Storage) Read(repo *map[string]string) error {
 	var largestUUID int
 	fileScanner := bufio.NewScanner(file)
 	for fileScanner.Scan() {
-		line := fileScanner.Text()
+
 		var uj models.URLJson
-		err := json.Unmarshal([]byte(line), &uj)
+		err := json.Unmarshal(fileScanner.Bytes(), &uj)
 		if err != nil {
 			return fmt.Errorf("error parsing line: %v", err)
 		}
