@@ -63,7 +63,7 @@ func (s *Storage) Read(repo *map[string]string) error {
 
 		url, err := url.Parse(uj.ShortURL)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		shortURL := path.Base(url.Path)
 		(*repo)[shortURL] = uj.OriginalURL
