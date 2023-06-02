@@ -19,6 +19,7 @@ func (h *Handler) ExpandURL(c *gin.Context) {
 		http.Error(c.Writer, "No original URL found", http.StatusNotFound)
 		return
 	}
+
 	c.Status(http.StatusTemporaryRedirect)
-	c.Header("Location", value)
+	c.Header("Location", string(value))
 }

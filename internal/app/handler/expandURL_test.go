@@ -1,20 +1,29 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/config"
-	"github.com/MrTomSawyer/url-shortener/cmd/shortener/service"
+	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 	"github.com/gin-gonic/gin"
 )
 
 func TestExpandURL(t *testing.T) {
-	appConfig := config.AppConfig{}
-	appConfig.InitAppConfig()
+	cfg := config.AppConfig{}
+	cfg.Server.DefaultAddr = "http://localhost:8080"
+	cfg.Server.ServerAddr = ":8080"
+	cfg.Server.TempFolder = "/tmp/short-url-db.json"
+
 	var testVault = map[string]string{"e9db20b2": "https://yandex.ru"}
+	storage, err := service.NewStorage(cfg.Server.TempFolder)
+	if err != nil {
+		fmt.Printf("Failed to create test storage: %v", err)
+		return
+	}
 
 	type want struct {
 		code     int
@@ -57,8 +66,13 @@ func TestExpandURL(t *testing.T) {
 
 			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(""))
 			c.AddParam("id", test.id)
+
+			serviceContainer, err := service.NewServiceContainer(testVault, cfg, storage)
+			if err != nil {
+				fmt.Printf("Error creating service container: %v", err)
+			}
 			h := Handler{
-				services: service.NewServiceContainer(testVault, appConfig),
+				services: serviceContainer,
 			}
 			h.ExpandURL(c)
 			if c.Writer.Status() != test.want.code {
