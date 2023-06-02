@@ -16,6 +16,12 @@ type Storage struct {
 	largestUUID int
 }
 
+func NewStorage(path string) (*Storage, error) {
+	return &Storage{
+		path: path,
+	}, nil
+}
+
 func (s *Storage) Write(uj *models.URLJson) error {
 	file, err := os.OpenFile(s.path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
@@ -28,7 +34,7 @@ func (s *Storage) Write(uj *models.URLJson) error {
 
 	parsedURLJSON, err := json.Marshal(uj)
 	if err != nil {
-		return fmt.Errorf("error parsing data: %v", err)
+		return fmt.Errorf("error parsing data: %w", err)
 	}
 
 	_, err = fileWriter.Write(parsedURLJSON)
@@ -76,10 +82,4 @@ func (s *Storage) Read(repo *map[string]string) error {
 	}
 
 	return nil
-}
-
-func NewStorage(path string) (*Storage, error) {
-	return &Storage{
-		path: path,
-	}, nil
 }
