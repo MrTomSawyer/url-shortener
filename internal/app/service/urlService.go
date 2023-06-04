@@ -8,10 +8,12 @@ import (
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/models"
+	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 )
 
 type urlService struct {
 	repo    map[string]string
+	db      *repository.Repository
 	config  config.AppConfig
 	storage *Storage
 }

@@ -22,6 +22,7 @@ func (h Handler) InitRoutes(lg middlewares.Logger) *gin.Engine {
 
 	router.POST("/", h.ShortenURL)
 	router.GET("/:id", h.ExpandURL)
+	router.GET("/ping", h.pingDB)
 
 	api := router.Group("/api")
 	{

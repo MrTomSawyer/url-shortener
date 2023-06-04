@@ -67,7 +67,7 @@ func TestExpandURL(t *testing.T) {
 			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(""))
 			c.AddParam("id", test.id)
 
-			serviceContainer, err := service.NewServiceContainer(testVault, cfg, storage)
+			serviceContainer, err := service.NewServiceContainer(testVault, cfg, storage, nil)
 			if err != nil {
 				fmt.Printf("Error creating service container: %v", err)
 			}
