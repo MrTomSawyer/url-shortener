@@ -13,7 +13,7 @@ import (
 
 type urlService struct {
 	repo    map[string]string
-	db      *repository.Repository
+	db      *repository.RepositoryContainer
 	config  config.AppConfig
 	storage *Storage
 }

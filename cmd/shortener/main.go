@@ -41,10 +41,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
 
-	PostgresRepo := repository.NewRepository(db)
+	postgresRepo := repository.NewRepository(db)
+	err = postgresRepo.InitTables()
+	if err != nil {
+		panic(err)
+	}
 
-	services, err := service.NewServiceContainer(repo, appConfig, storage, PostgresRepo)
+	services, err := service.NewServiceContainer(repo, appConfig, storage, postgresRepo)
 	if err != nil {
 		panic(err)
 	}

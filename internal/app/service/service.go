@@ -7,10 +7,10 @@ import (
 
 type ServiceContainer struct {
 	URL urlService
-	DB  *repository.Repository
+	DB  *repository.RepositoryContainer
 }
 
-func NewServiceContainer(repo map[string]string, config config.AppConfig, storage *Storage, db *repository.Repository) (*ServiceContainer, error) {
+func NewServiceContainer(repo map[string]string, config config.AppConfig, storage *Storage, db *repository.RepositoryContainer) (*ServiceContainer, error) {
 	URLService := urlService{
 		repo:    repo,
 		db:      db,
