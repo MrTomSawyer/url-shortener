@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 )
 
@@ -30,12 +31,16 @@ func NewFileURLrepo(path string) (*FileURLrepo, error) {
 }
 
 func (s *FileURLrepo) Create(shortURL, originalURL string) error {
+	logger.Log.Infof("Writing to file... ShortURL: %s, OriginalURL: %s", shortURL, originalURL)
+
 	uj := models.URLJson{
 		UUID:        s.largestUUID + 1,
 		ShortURL:    shortURL,
 		OriginalURL: originalURL,
 	}
 	s.largestUUID += 1
+	s.storage[shortURL] = originalURL
+
 	file, err := os.OpenFile(s.path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		return fmt.Errorf("error opening file to write: %v", err)
@@ -64,6 +69,7 @@ func (s *FileURLrepo) Create(shortURL, originalURL string) error {
 }
 
 func (s *FileURLrepo) Read() error {
+	logger.Log.Infof("Starting to read file...")
 	file, err := os.OpenFile(s.path, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return fmt.Errorf("error opening file to read: %v", err)
@@ -93,7 +99,7 @@ func (s *FileURLrepo) Read() error {
 
 		s.largestUUID = largestUUID
 	}
-
+	logger.Log.Infof("File has been read")
 	return nil
 }
 

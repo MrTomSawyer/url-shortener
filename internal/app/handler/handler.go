@@ -16,9 +16,9 @@ func NewHandler(services *service.ServiceContainer) *Handler {
 	}
 }
 
-func (h Handler) InitRoutes(lg middlewares.Logger) *gin.Engine {
+func (h Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
-	router.Use(middlewares.LogReqResInfo(lg), middlewares.DataCompressor())
+	router.Use(middlewares.LogReqResInfo(), middlewares.DataCompressor())
 
 	router.POST("/", h.ShortenURL)
 	router.GET("/:id", h.ExpandURL)

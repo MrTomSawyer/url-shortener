@@ -6,20 +6,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/gin-gonic/gin"
 )
 
-type Logger interface {
-	Infof(template string, args ...interface{})
-}
-
-func LogReqResInfo(lg Logger) gin.HandlerFunc {
+func LogReqResInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startTime := time.Now()
 		c.Next()
 		latency := time.Since(startTime)
 
-		lg.Infof("Method: %s URI: %s Latency: %v", c.Request.Method, c.Request.URL, latency)
+		logger.Log.Infof("Method: %s URI: %s Latency: %v", c.Request.Method, c.Request.URL, latency)
 	}
 }
 

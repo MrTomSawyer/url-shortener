@@ -3,12 +3,12 @@ package main
 import (
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/handler"
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 	"github.com/MrTomSawyer/url-shortener/internal/app/server"
 	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 
 	_ "github.com/lib/pq"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -18,12 +18,10 @@ func main() {
 		panic(err)
 	}
 
-	logger, err := zap.NewDevelopment()
+	err = logger.InitLogger()
 	if err != nil {
 		panic(err)
 	}
-	defer logger.Sync()
-	sugar := logger.Sugar()
 
 	repo, err := repository.NewRepositoryContainer(appConfig)
 	if err != nil {
@@ -37,7 +35,7 @@ func main() {
 	handler := handler.NewHandler(services)
 	server := new(server.Server)
 
-	if err := server.Run(appConfig.Server.ServerAddr, handler.InitRoutes(sugar)); err != nil {
+	if err := server.Run(appConfig.Server.ServerAddr, handler.InitRoutes()); err != nil {
 		panic(err)
 	}
 }
