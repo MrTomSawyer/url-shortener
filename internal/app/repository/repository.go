@@ -21,7 +21,7 @@ func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) 
 	var db *sqlx.DB
 
 	if cfg.DataBase.ConnectionStr != "" {
-		logger.Log.Infof("Initializing postgres repository")
+		logger.Log.Infof("Initializing postgres repository. Connection string: %s", cfg.DataBase.ConnectionStr)
 		db, err := NewPostgresDB(cfg.DataBase.ConnectionStr)
 		if err != nil {
 			return nil, err
