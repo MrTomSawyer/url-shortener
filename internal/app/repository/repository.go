@@ -1,54 +1,56 @@
 package repository
 
 import (
+	"fmt"
+
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/jmoiron/sqlx"
 )
 
-type repoHandler interface {
+type RepoHandler interface {
 	Create(shortURL, originalURL string) error
 	OriginalURL(shortURL string) (string, error)
 }
 
 type RepositoryContainer struct {
 	Postgres *sqlx.DB
-	URLrepo  repoHandler
+	URLrepo  RepoHandler
 }
 
-type repoMode string
-
-const (
-	InMemory repoMode = "InMemory"
-	File     repoMode = "File"
-	DB       repoMode = "DB"
-)
-
-func NewRepositoryContainer(db *sqlx.DB, cfg config.AppConfig) *RepositoryContainer {
-	var ur repoHandler
+func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) {
+	var ur RepoHandler
+	var db *sqlx.DB
 
 	if cfg.DataBase.ConnectionStr != "" {
+		fmt.Println("PG REPO")
+		db, err := NewPostgresDB(cfg.DataBase.ConnectionStr)
+		if err != nil {
+			return nil, err
+		}
+		query := `CREATE TABLE IF NOT EXISTS urls (
+			id SERIAL PRIMARY KEY,
+			shortURL TEXT,
+			OriginalURL TEXT
+		)`
+		if _, err := db.Exec(query); err != nil {
+			return nil, err
+		}
+		defer db.Close()
 		ur = NewPostgresURLrepo(db)
 	} else if cfg.Server.TempFolder != "" {
-		ur = NewFileURLrepo(cfg.Server.TempFolder)
+		fmt.Println("FILE REPO")
+		fileRepo, err := NewFileURLrepo(cfg.Server.TempFolder)
+		if err != nil {
+			return nil, err
+		}
+		ur = fileRepo
 	} else {
+		fmt.Println("INMEMO REPO")
 		ur = NewInMemoryURLRepo()
 	}
 
 	return &RepositoryContainer{
 		Postgres: db,
 		URLrepo:  ur,
-	}
-}
-
-func (r RepositoryContainer) InitTables() error {
-	query := `CREATE TABLE IF NOT EXISTS urls (
-		id SERIAL PRIMARY KEY,
-		shortURL TEXT,
-		OriginalURL TEXT
-	)`
-
-	if _, err := r.Postgres.Exec(query); err != nil {
-		return err
-	}
-	return nil
+	}, nil
 }

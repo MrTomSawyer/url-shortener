@@ -7,15 +7,12 @@ import (
 	"strconv"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
-	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 )
 
 type urlService struct {
-	repo    map[string]string
-	db      *repository.RepositoryContainer
-	config  config.AppConfig
-	storage *Storage
+	repo   repository.RepoHandler
+	config config.AppConfig
 }
 
 func (u *urlService) ShortenURL(body string) (string, error) {
@@ -23,41 +20,37 @@ func (u *urlService) ShortenURL(body string) (string, error) {
 	hasher.Write([]byte(body))
 	hash := hex.EncodeToString(hasher.Sum(nil))[:8]
 
-	var shortURL string
-	if _, ok := u.repo[hash]; !ok {
-		u.repo[hash] = body
-		shortURL = fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, hash)
-	} else {
+	val, err := u.repo.OriginalURL(hash)
+	if err != nil {
+		return "", fmt.Errorf("failed to check if such short url value presents: %v", err)
+	}
+	if val != "" {
 		counter := 1
 		for {
 			newHash := hash + strconv.Itoa(counter)
-			if _, ok := u.repo[newHash]; !ok {
-				u.repo[newHash] = body
-				shortURL = fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, newHash)
+			val, err := u.repo.OriginalURL(newHash)
+			if err != nil {
+				return "", fmt.Errorf("failed to check if such short url value presents: %v", err)
+			}
+			if val == "" {
+				hash = newHash
 				break
 			}
 			counter++
 		}
 	}
 
-	uj := models.URLJson{
-		UUID:        u.storage.largestUUID + 1,
-		ShortURL:    shortURL,
-		OriginalURL: body,
-	}
-	err := u.storage.Write(&uj)
+	err = u.repo.Create(hash, body)
 	if err != nil {
-		fmt.Println("Failed to write data to file", err)
+		return "", fmt.Errorf("failed to save short URL: %v", err)
 	}
-	u.storage.largestUUID++
-
-	return shortURL, nil
+	return fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, hash), nil
 }
 
 func (u *urlService) ExpandURL(path string) (string, error) {
-	if value, ok := u.repo[path]; ok {
-		return value, nil
-	} else {
+	url, err := u.repo.OriginalURL(path)
+	if err != nil {
 		return "", fmt.Errorf("URL path '%s' not found", path)
 	}
+	return url, nil
 }

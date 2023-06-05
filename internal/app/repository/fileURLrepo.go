@@ -17,11 +17,16 @@ type FileURLrepo struct {
 	largestUUID int
 }
 
-func NewFileURLrepo(path string) *FileURLrepo {
-	return &FileURLrepo{
+func NewFileURLrepo(path string) (*FileURLrepo, error) {
+	fileRepo := FileURLrepo{
 		storage: map[string]string{},
 		path:    path,
 	}
+
+	if err := fileRepo.Read(); err != nil {
+		return nil, err
+	}
+	return &fileRepo, nil
 }
 
 func (s *FileURLrepo) Create(shortURL, originalURL string) error {
@@ -30,6 +35,7 @@ func (s *FileURLrepo) Create(shortURL, originalURL string) error {
 		ShortURL:    shortURL,
 		OriginalURL: originalURL,
 	}
+	s.largestUUID += 1
 	file, err := os.OpenFile(s.path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		return fmt.Errorf("error opening file to write: %v", err)

@@ -25,31 +25,12 @@ func main() {
 	defer logger.Sync()
 	sugar := logger.Sugar()
 
-	repo := make(map[string]string)
-
-	storage, err := service.NewStorage(appConfig.Server.TempFolder)
+	repo, err := repository.NewRepositoryContainer(appConfig)
 	if err != nil {
 		panic(err)
 	}
-
-	err = storage.Read(&repo)
-	if err != nil {
-		panic(err)
-	}
-
-	db, err := repository.NewPostgresDB(appConfig.DataBase.ConnectionStr)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	postgresRepo := repository.NewRepository(db)
-	err = postgresRepo.InitTables()
-	if err != nil {
-		panic(err)
-	}
-
-	services, err := service.NewServiceContainer(repo, appConfig, storage, postgresRepo)
+	
+	services, err := service.NewServiceContainer(repo, appConfig)
 	if err != nil {
 		panic(err)
 	}
