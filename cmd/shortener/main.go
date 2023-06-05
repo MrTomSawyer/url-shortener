@@ -29,7 +29,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	services, err := service.NewServiceContainer(repo, appConfig)
 	if err != nil {
 		panic(err)

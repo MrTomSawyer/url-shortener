@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"fmt"
-
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/jmoiron/sqlx"
 )
@@ -22,7 +20,6 @@ func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) 
 	var db *sqlx.DB
 
 	if cfg.DataBase.ConnectionStr != "" {
-		fmt.Println("PG REPO")
 		db, err := NewPostgresDB(cfg.DataBase.ConnectionStr)
 		if err != nil {
 			return nil, err
@@ -37,15 +34,16 @@ func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) 
 		}
 		defer db.Close()
 		ur = NewPostgresURLrepo(db)
+
 	} else if cfg.Server.TempFolder != "" {
-		fmt.Println("FILE REPO")
 		fileRepo, err := NewFileURLrepo(cfg.Server.TempFolder)
 		if err != nil {
 			return nil, err
 		}
 		ur = fileRepo
+
 	} else {
-		fmt.Println("INMEMO REPO")
+
 		ur = NewInMemoryURLRepo()
 	}
 
