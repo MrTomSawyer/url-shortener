@@ -22,7 +22,8 @@ func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) 
 
 	if cfg.DataBase.ConnectionStr != "" {
 		logger.Log.Infof("Initializing postgres repository. Connection string: %s", cfg.DataBase.ConnectionStr)
-		db, err := NewPostgresDB(cfg.DataBase.ConnectionStr)
+		var err error
+		db, err = NewPostgresDB(cfg.DataBase.ConnectionStr)
 		if err != nil {
 			return nil, err
 		}
@@ -34,7 +35,7 @@ func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) 
 		if _, err := db.Exec(query); err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		// defer db.Close()
 		ur = NewPostgresURLrepo(db)
 
 	} else if cfg.Server.TempFolder != "" {
