@@ -30,7 +30,7 @@ func (h *Handler) ShortenURLjson(c *gin.Context) {
 		return
 	}
 
-	shortenURL, err := h.services.URL.ShortenURL(req.URL)
+	shortenURL, err := h.services.URL.ShortenURLHandler(req.URL)
 	if err != nil {
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 	}
