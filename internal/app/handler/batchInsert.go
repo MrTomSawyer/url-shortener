@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"github.com/gin-gonic/gin"
 )
@@ -13,6 +14,7 @@ import (
 func (h Handler) batchURLinsert(c *gin.Context) {
 	tx, err := h.services.DB.Begin()
 	if err != nil {
+		logger.Log.Infof("Failed to start transaction")
 		c.AbortWithError(http.StatusInternalServerError, err)
 	}
 
@@ -29,6 +31,7 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 	decoder := json.NewDecoder(body)
 	err = decoder.Decode(&parsedReq)
 	if err != nil {
+		logger.Log.Infof("Failed to decode json")
 		c.AbortWithError(http.StatusInternalServerError, err)
 	}
 
@@ -37,12 +40,14 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 	for _, req := range parsedReq {
 		shortURL, err := h.services.URL.ShortenURL(req.OriginalURL)
 		if err != nil {
+			logger.Log.Infof("Failed to shorten URL")
 			continue
 		}
 		query := "INSERT INTO urls (correlationid, shorturl, originalurl) VALUES ($1, $2, $3)"
 		_, err = tx.Exec(query, req.CorrelationID, shortURL, req.OriginalURL)
 
 		if err != nil {
+			logger.Log.Infof("Failed to insert a shortened URL")
 			continue
 		}
 
@@ -54,9 +59,10 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 
 	err = tx.Commit()
 	if err != nil {
+		logger.Log.Infof("Failed to commit a transaction")
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusCreated, response)
 }
