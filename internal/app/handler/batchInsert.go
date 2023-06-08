@@ -47,7 +47,7 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 		_, err = tx.Exec(query, req.CorrelationID, shortURL, req.OriginalURL)
 
 		if err != nil {
-			logger.Log.Infof("Failed to insert a shortened URL")
+			logger.Log.Infof("Failed to insert a shortened URL", req.CorrelationID, shortURL, req.OriginalURL)
 			continue
 		}
 
