@@ -35,7 +35,7 @@ func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) 
 		if _, err := db.Exec(query); err != nil {
 			return nil, err
 		}
-		// defer db.Close()
+
 		ur = NewPostgresURLrepo(db)
 
 	} else if cfg.Server.TempFolder != "" {

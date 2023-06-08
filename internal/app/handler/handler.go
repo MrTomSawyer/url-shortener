@@ -27,6 +27,7 @@ func (h Handler) InitRoutes() *gin.Engine {
 	api := router.Group("/api")
 	{
 		api.POST("/shorten", h.ShortenURLjson)
+		api.POST("/shorten/batch", h.batchURLinsert)
 	}
 
 	return router

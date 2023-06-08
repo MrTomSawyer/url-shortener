@@ -11,44 +11,53 @@ import (
 )
 
 type urlService struct {
-	repo   repository.RepoHandler
+	Repo   repository.RepoHandler
 	config config.AppConfig
+}
+
+func (u *urlService) ShortenURLHandler(body string) (string, error) {
+	shortPath, err := u.ShortenURL(body)
+	if err != nil {
+		return "", err
+	}
+
+	err = u.Repo.Create(shortPath, body)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, shortPath), nil
 }
 
 func (u *urlService) ShortenURL(body string) (string, error) {
 	hasher := md5.New()
 	hasher.Write([]byte(body))
-	hash := hex.EncodeToString(hasher.Sum(nil))[:8]
+	shortPath := hex.EncodeToString(hasher.Sum(nil))[:8]
 
-	val, err := u.repo.OriginalURL(hash)
+	val, err := u.Repo.OriginalURL(shortPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to check if such short url value presents: %v", err)
 	}
 	if val != "" {
 		counter := 1
 		for {
-			newHash := hash + strconv.Itoa(counter)
-			val, err := u.repo.OriginalURL(newHash)
+			newShortPath := shortPath + strconv.Itoa(counter)
+			val, err := u.Repo.OriginalURL(newShortPath)
 			if err != nil {
 				return "", fmt.Errorf("failed to check if such short url value presents: %v", err)
 			}
 			if val == "" {
-				hash = newHash
+				shortPath = newShortPath
 				break
 			}
 			counter++
 		}
 	}
-
-	err = u.repo.Create(hash, body)
-	if err != nil {
-		return "", fmt.Errorf("failed to save short URL: %v", err)
-	}
-	return fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, hash), nil
+	return shortPath, nil
 }
 
 func (u *urlService) ExpandURL(path string) (string, error) {
-	url, err := u.repo.OriginalURL(path)
+	url, err := u.Repo.OriginalURL(path)
 	if err != nil {
 		return "", fmt.Errorf("URL path '%s' not found", path)
 	}

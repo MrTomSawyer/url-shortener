@@ -13,7 +13,7 @@ type ServiceContainer struct {
 
 func NewServiceContainer(repo *repository.RepositoryContainer, config config.AppConfig) (*ServiceContainer, error) {
 	URLService := urlService{
-		repo:   repo.URLrepo,
+		Repo:   repo.URLrepo,
 		config: config,
 	}
 
