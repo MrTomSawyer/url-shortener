@@ -28,7 +28,7 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 	}
 
 	bodyStr := string(data)
-	shortURL, err := h.services.URL.ShortenURL(bodyStr)
+	shortURL, err := h.services.URL.ShortenURLHandler(bodyStr)
 	if err != nil {
 		fmt.Printf("Failed to shorten a url: %v\n", err)
 		c.Writer.WriteHeader(http.StatusInternalServerError)
