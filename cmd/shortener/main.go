@@ -32,7 +32,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	handler := handler.NewHandler(services)
+	handler := handler.NewHandler(services, appConfig)
 	server := new(server.Server)
 
 	if err := server.Run(appConfig.Server.ServerAddr, handler.InitRoutes()); err != nil {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/middlewares"
 	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 	"github.com/gin-gonic/gin"
@@ -8,11 +9,13 @@ import (
 
 type Handler struct {
 	services *service.ServiceContainer
+	Cfg      config.AppConfig
 }
 
-func NewHandler(services *service.ServiceContainer) *Handler {
+func NewHandler(services *service.ServiceContainer, cfg config.AppConfig) *Handler {
 	return &Handler{
 		services: services,
+		Cfg:      cfg,
 	}
 }
 
