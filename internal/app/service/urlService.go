@@ -3,9 +3,11 @@ package service
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strconv"
 
+	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 )
@@ -23,6 +25,10 @@ func (u *urlService) ShortenURLHandler(body string) (string, error) {
 
 	err = u.Repo.Create(shortPath, body)
 	if err != nil {
+		var urlConflictError *apperrors.URLConflict
+		if errors.As(err, &urlConflictError) {
+			return fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, urlConflictError.Value), err
+		}
 		return "", err
 	}
 

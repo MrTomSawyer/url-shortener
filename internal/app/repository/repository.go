@@ -22,6 +22,7 @@ func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) 
 
 	if cfg.DataBase.ConnectionStr != "" {
 		logger.Log.Infof("Initializing postgres repository. Connection string: %s", cfg.DataBase.ConnectionStr)
+
 		var err error
 		db, err = NewPostgresDB(cfg.DataBase.ConnectionStr)
 		if err != nil {
@@ -32,11 +33,14 @@ func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) 
 			correlationid TEXT,
 			shorturl TEXT,
 			originalurl TEXT
-		)`
+		);`
 		if _, err := db.Exec(query); err != nil {
 			return nil, err
 		}
-
+		uniqueIndexQuery := "CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_originalurl ON urls (originalurl);"
+		if _, err := db.Exec(uniqueIndexQuery); err != nil {
+			return nil, err
+		}
 		ur = NewPostgresURLrepo(db)
 
 	} else if cfg.Server.TempFolder != "" {

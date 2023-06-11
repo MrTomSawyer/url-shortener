@@ -1,8 +1,11 @@
 package repository
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -19,11 +22,20 @@ func NewPostgresURLrepo(db *sqlx.DB) *PostgresURLrepo {
 }
 
 func (u PostgresURLrepo) Create(shortURL, originalURL string) error {
-	query := fmt.Sprintf("INSERT INTO %s (shortURL, OriginalURL) VALUES ($1, $2) RETURNING id", u.Table)
+	query := fmt.Sprintf("INSERT INTO %s (shortURL, OriginalURL) VALUES ($1, $2) ON CONFLICT (OriginalURL) DO NOTHING RETURNING id", u.Table)
 	row := u.Postgres.QueryRow(query, shortURL, originalURL)
-	var createdRow string
-	err := row.Scan(&createdRow)
+	var res string
+	err := row.Scan(&res)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			query := fmt.Sprintf("SELECT shortURL FROM %s WHERE OriginalURL=$1", u.Table)
+			row := u.Postgres.QueryRow(query, originalURL)
+			err := row.Scan(&res)
+			if err != nil {
+				return err
+			}
+			return apperrors.NewURLConflict(res, err)
+		}
 		return err
 	}
 	return nil
