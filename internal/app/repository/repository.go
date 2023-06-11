@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/jmoiron/sqlx"
@@ -16,7 +18,7 @@ type RepositoryContainer struct {
 	URLrepo  RepoHandler
 }
 
-func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) {
+func NewRepositoryContainer(ctx context.Context, cfg config.AppConfig) (*RepositoryContainer, error) {
 	var ur RepoHandler
 	var db *sqlx.DB
 
@@ -34,14 +36,14 @@ func NewRepositoryContainer(cfg config.AppConfig) (*RepositoryContainer, error) 
 			shorturl TEXT,
 			originalurl TEXT
 		);`
-		if _, err := db.Exec(query); err != nil {
+		if _, err := db.ExecContext(ctx, query); err != nil {
 			return nil, err
 		}
 		uniqueIndexQuery := "CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_originalurl ON urls (originalurl);"
-		if _, err := db.Exec(uniqueIndexQuery); err != nil {
+		if _, err := db.ExecContext(ctx, uniqueIndexQuery); err != nil {
 			return nil, err
 		}
-		ur = NewPostgresURLrepo(db)
+		ur = NewPostgresURLrepo(ctx, db)
 
 	} else if cfg.Server.TempFolder != "" {
 		logger.Log.Infof("Initializing file repository")

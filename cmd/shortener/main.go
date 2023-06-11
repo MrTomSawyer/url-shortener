@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/handler"
 	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
@@ -23,7 +25,7 @@ func main() {
 		panic(err)
 	}
 
-	repo, err := repository.NewRepositoryContainer(appConfig)
+	repo, err := repository.NewRepositoryContainer(context.Background(), appConfig)
 	if err != nil {
 		panic(err)
 	}

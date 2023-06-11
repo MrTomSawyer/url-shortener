@@ -1,9 +1,11 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
 	"github.com/jmoiron/sqlx"
@@ -12,24 +14,29 @@ import (
 type PostgresURLrepo struct {
 	Table    string
 	Postgres *sqlx.DB
+	ctx      context.Context
 }
 
-func NewPostgresURLrepo(db *sqlx.DB) *PostgresURLrepo {
+func NewPostgresURLrepo(ctx context.Context, db *sqlx.DB) *PostgresURLrepo {
 	return &PostgresURLrepo{
 		Table:    "urls",
 		Postgres: db,
+		ctx:      ctx,
 	}
 }
 
 func (u PostgresURLrepo) Create(shortURL, originalURL string) error {
+	cxt, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
+	defer cancel()
+
 	query := fmt.Sprintf("INSERT INTO %s (shortURL, OriginalURL) VALUES ($1, $2) ON CONFLICT (OriginalURL) DO NOTHING RETURNING id", u.Table)
-	row := u.Postgres.QueryRow(query, shortURL, originalURL)
+	row := u.Postgres.QueryRowContext(cxt, query, shortURL, originalURL)
 	var res string
 	err := row.Scan(&res)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			query := fmt.Sprintf("SELECT shortURL FROM %s WHERE OriginalURL=$1", u.Table)
-			row := u.Postgres.QueryRow(query, originalURL)
+			row := u.Postgres.QueryRowContext(cxt, query, originalURL)
 			err := row.Scan(&res)
 			if err != nil {
 				return err
@@ -42,8 +49,11 @@ func (u PostgresURLrepo) Create(shortURL, originalURL string) error {
 }
 
 func (u PostgresURLrepo) OriginalURL(shortURL string) (string, error) {
+	cxt, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
+	defer cancel()
+
 	query := fmt.Sprintf("SELECT originalurl from %s WHERE shorturl=$1", u.Table)
-	row := u.Postgres.QueryRow(query, shortURL)
+	row := u.Postgres.QueryRowContext(cxt, query, shortURL)
 	var originalURL string
 	err := row.Scan(&originalURL)
 	if err != nil {
