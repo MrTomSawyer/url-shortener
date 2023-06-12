@@ -15,7 +15,7 @@ func (h *Handler) ExpandURL(c *gin.Context) {
 	}
 
 	value, err := h.services.URL.ExpandURL(id)
-	if err != nil {
+	if err != nil || value == "" {
 		http.Error(c.Writer, "No original URL found", http.StatusNotFound)
 		return
 	}

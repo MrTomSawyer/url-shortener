@@ -69,8 +69,7 @@ func TestExpandURL(t *testing.T) {
 			defer ctrl.Finish()
 
 			m := mocks.NewMockRepoHandler(ctrl)
-			m.EXPECT().OriginalURL("e9db20b2").Return("https://yandex.ru", nil)
-			m.EXPECT().OriginalURL("fff").Return("", nil)
+			m.EXPECT().OriginalURL(test.id).Return(test.want.response, nil)
 
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
