@@ -15,6 +15,7 @@ package handler
 // 	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 // 	"github.com/gin-gonic/gin"
 // 	"github.com/golang/mock/gomock"
+// 	"github.com/jmoiron/sqlx"
 // )
 
 // func TestExpandURL(t *testing.T) {
@@ -78,7 +79,8 @@ package handler
 // 			m.EXPECT().OriginalURL("e9db20b2").Return("https://yandex.ru", nil)
 // 			m.EXPECT().OriginalURL("fff").Return("", nil)
 
-// 			repo, err := repository.NewRepositoryContainer(context.Background(), cfg)
+// 			var db *sqlx.DB
+// 			repo, err := repository.NewRepositoryContainer(context.Background(), cfg, db, m)
 // 			if err != nil {
 // 				fmt.Printf("Error creating repo container: %v", err)
 // 			}

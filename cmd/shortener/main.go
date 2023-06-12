@@ -34,7 +34,13 @@ func main() {
 		}
 		defer db.Close()
 	}
-	repo, err := repository.NewRepositoryContainer(context.Background(), appConfig, db)
+
+	urlRepo, err := repository.InitRepository(context.Background(), appConfig, db)
+	if err != nil {
+		panic(err)
+	}
+
+	repo, err := repository.NewRepositoryContainer(context.Background(), appConfig, db, urlRepo)
 	if err != nil {
 		panic(err)
 	}

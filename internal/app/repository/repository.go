@@ -18,19 +18,15 @@ type RepositoryContainer struct {
 	URLrepo  RepoHandler
 }
 
-func NewRepositoryContainer(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (*RepositoryContainer, error) {
-	ur, err := initRepository(ctx, cfg, db)
-	if err != nil {
-		return nil, err
-	}
+func NewRepositoryContainer(ctx context.Context, cfg config.AppConfig, db *sqlx.DB, urlRepo RepoHandler) (*RepositoryContainer, error) {
 
 	return &RepositoryContainer{
 		Postgres: db,
-		URLrepo:  ur,
+		URLrepo:  urlRepo,
 	}, nil
 }
 
-func initRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (RepoHandler, error) {
+func InitRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (RepoHandler, error) {
 	switch {
 	case cfg.DataBase.ConnectionStr != "":
 		logger.Log.Infof("Initializing postgres repository. Connection string: %s", cfg.DataBase.ConnectionStr)
