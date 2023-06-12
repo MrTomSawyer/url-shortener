@@ -40,7 +40,7 @@ func main() {
 		panic(err)
 	}
 
-	repo, err := repository.NewRepositoryContainer(context.Background(), appConfig, db, urlRepo)
+	repo, err := repository.NewRepositoryContainer(db, urlRepo)
 	if err != nil {
 		panic(err)
 	}

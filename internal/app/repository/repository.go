@@ -18,7 +18,7 @@ type RepositoryContainer struct {
 	URLrepo  RepoHandler
 }
 
-func NewRepositoryContainer(ctx context.Context, cfg config.AppConfig, db *sqlx.DB, urlRepo RepoHandler) (*RepositoryContainer, error) {
+func NewRepositoryContainer(db *sqlx.DB, urlRepo RepoHandler) (*RepositoryContainer, error) {
 
 	return &RepositoryContainer{
 		Postgres: db,

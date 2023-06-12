@@ -21,5 +21,5 @@ func (h *Handler) ExpandURL(c *gin.Context) {
 	}
 
 	c.Status(http.StatusTemporaryRedirect)
-	c.Header("Location", string(value))
+	c.Header("Location", value)
 }

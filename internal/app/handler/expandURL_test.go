@@ -1,7 +1,6 @@
 package handler
 
 // import (
-// 	"context"
 // 	"fmt"
 // 	"net/http"
 // 	"net/http/httptest"
@@ -70,28 +69,31 @@ package handler
 // 			defer ctrl.Finish()
 
 // 			m := mocks.NewMockRepoHandler(ctrl)
+// 			m.EXPECT().OriginalURL("e9db20b2").Return("https://yandex.ru", nil)
+// 			m.EXPECT().OriginalURL("fff").Return("", nil)
 
 // 			w := httptest.NewRecorder()
 // 			c, _ := gin.CreateTestContext(w)
 
 // 			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(""))
 // 			c.AddParam("id", test.id)
-// 			m.EXPECT().OriginalURL("e9db20b2").Return("https://yandex.ru", nil)
-// 			m.EXPECT().OriginalURL("fff").Return("", nil)
 
 // 			var db *sqlx.DB
-// 			repo, err := repository.NewRepositoryContainer(context.Background(), cfg, db, m)
+// 			repo, err := repository.NewRepositoryContainer(db, m)
 // 			if err != nil {
 // 				fmt.Printf("Error creating repo container: %v", err)
 // 			}
+
 // 			serviceContainer, err := service.NewServiceContainer(repo, cfg)
 // 			if err != nil {
 // 				fmt.Printf("Error creating service container: %v", err)
 // 			}
+
 // 			h := Handler{
 // 				services: serviceContainer,
 // 			}
 // 			h.ExpandURL(c)
+
 // 			if c.Writer.Status() != test.want.code {
 // 				t.Errorf("got status code %d, want %d", w.Code, test.want.code)
 // 			}
