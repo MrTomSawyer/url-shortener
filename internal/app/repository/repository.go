@@ -18,48 +18,55 @@ type RepositoryContainer struct {
 	URLrepo  RepoHandler
 }
 
-func NewRepositoryContainer(ctx context.Context, cfg config.AppConfig) (*RepositoryContainer, error) {
-	var ur RepoHandler
-	var db *sqlx.DB
-
-	if cfg.DataBase.ConnectionStr != "" {
-		logger.Log.Infof("Initializing postgres repository. Connection string: %s", cfg.DataBase.ConnectionStr)
-
-		var err error
-		db, err = NewPostgresDB(cfg.DataBase.ConnectionStr)
-		if err != nil {
-			return nil, err
-		}
-		query := `CREATE TABLE IF NOT EXISTS urls (
-			id SERIAL PRIMARY KEY,
-			correlationid TEXT,
-			shorturl TEXT,
-			originalurl TEXT
-		);`
-		if _, err := db.ExecContext(ctx, query); err != nil {
-			return nil, err
-		}
-		uniqueIndexQuery := "CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_originalurl ON urls (originalurl);"
-		if _, err := db.ExecContext(ctx, uniqueIndexQuery); err != nil {
-			return nil, err
-		}
-		ur = NewPostgresURLrepo(ctx, db)
-
-	} else if cfg.Server.TempFolder != "" {
-		logger.Log.Infof("Initializing file repository")
-		fileRepo, err := NewFileURLrepo(cfg.Server.TempFolder)
-		if err != nil {
-			return nil, err
-		}
-		ur = fileRepo
-
-	} else {
-		logger.Log.Infof("Initializing in-memory repository")
-		ur = NewInMemoryURLRepo()
+func NewRepositoryContainer(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (*RepositoryContainer, error) {
+	ur, err := initRepository(ctx, cfg, db)
+	if err != nil {
+		return nil, err
 	}
 
 	return &RepositoryContainer{
 		Postgres: db,
 		URLrepo:  ur,
 	}, nil
+}
+
+func initRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (RepoHandler, error) {
+	switch {
+	case cfg.DataBase.ConnectionStr != "":
+		logger.Log.Infof("Initializing postgres repository. Connection string: %s", cfg.DataBase.ConnectionStr)
+
+		createTableQuery := `
+			CREATE TABLE IF NOT EXISTS urls (
+				id SERIAL PRIMARY KEY,
+				correlationid TEXT,
+				shorturl TEXT,
+				originalurl TEXT
+			);`
+
+		if _, err := db.ExecContext(ctx, createTableQuery); err != nil {
+			return nil, err
+		}
+
+		uniqueIndexQuery := "CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_originalurl ON urls (originalurl);"
+		if _, err := db.ExecContext(ctx, uniqueIndexQuery); err != nil {
+			return nil, err
+		}
+
+		return NewPostgresURLrepo(ctx, db), nil
+
+	case cfg.Server.TempFolder != "":
+		logger.Log.Infof("Initializing file repository")
+
+		fileRepo, err := NewFileURLrepo(cfg.Server.TempFolder)
+		if err != nil {
+			return nil, err
+		}
+
+		return fileRepo, nil
+
+	default:
+		logger.Log.Infof("Initializing in-memory repository")
+
+		return NewInMemoryURLRepo(), nil
+	}
 }

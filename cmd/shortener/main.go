@@ -9,6 +9,7 @@ import (
 	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 	"github.com/MrTomSawyer/url-shortener/internal/app/server"
 	"github.com/MrTomSawyer/url-shortener/internal/app/service"
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/lib/pq"
 )
@@ -25,7 +26,15 @@ func main() {
 		panic(err)
 	}
 
-	repo, err := repository.NewRepositoryContainer(context.Background(), appConfig)
+	var db *sqlx.DB
+	if appConfig.DataBase.ConnectionStr != "" {
+		db, err = repository.NewPostgresDB(appConfig.DataBase.ConnectionStr)
+		if err != nil {
+			panic(err)
+		}
+		defer db.Close()
+	}
+	repo, err := repository.NewRepositoryContainer(context.Background(), appConfig, db)
 	if err != nil {
 		panic(err)
 	}
