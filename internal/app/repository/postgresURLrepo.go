@@ -8,6 +8,9 @@ import (
 	"time"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
+	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
+	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,13 +18,15 @@ type PostgresURLrepo struct {
 	Table    string
 	Postgres *sqlx.DB
 	ctx      context.Context
+	cfg      config.AppConfig
 }
 
-func NewPostgresURLrepo(ctx context.Context, db *sqlx.DB) *PostgresURLrepo {
+func NewPostgresURLrepo(ctx context.Context, db *sqlx.DB, cfg config.AppConfig) *PostgresURLrepo {
 	return &PostgresURLrepo{
 		Table:    "urls",
 		Postgres: db,
 		ctx:      ctx,
+		cfg:      cfg,
 	}
 }
 
@@ -60,4 +65,36 @@ func (u PostgresURLrepo) OriginalURL(shortURL string) (string, error) {
 		return "", nil
 	}
 	return originalURL, nil
+}
+
+func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
+	tx, err := u.Postgres.Begin()
+	if err != nil {
+		logger.Log.Infof("Failed to start transaction")
+		return []models.BatchURLResponce{}, err
+	}
+
+	var response []models.BatchURLResponce
+
+	for _, req := range data {
+		query := "INSERT INTO urls (correlationid, shorturl, originalurl) VALUES ($1, $2, $3)"
+		_, err = tx.Exec(query, req.CorrelationID, req.ShortURL, req.OriginalURL)
+
+		if err != nil {
+			logger.Log.Infof("Failed to insert a shortened URL", err)
+			tx.Rollback()
+			continue
+		}
+
+		response = append(response, models.BatchURLResponce{
+			CorrelationID: req.CorrelationID,
+			ShortURL:      fmt.Sprintf("%s/%s", u.cfg.Server.DefaultAddr, req.ShortURL),
+		})
+	}
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Infof("Failed to commit a transaction")
+		return []models.BatchURLResponce{}, err
+	}
+	return response, nil
 }

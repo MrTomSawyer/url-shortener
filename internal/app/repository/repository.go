@@ -5,12 +5,14 @@ import (
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
+	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"github.com/jmoiron/sqlx"
 )
 
 type RepoHandler interface {
 	Create(shortURL, originalURL string) error
 	OriginalURL(shortURL string) (string, error)
+	BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error)
 }
 
 type RepositoryContainer struct {
@@ -48,7 +50,7 @@ func InitRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (Rep
 			return nil, err
 		}
 
-		return NewPostgresURLrepo(ctx, db), nil
+		return NewPostgresURLrepo(ctx, db, cfg), nil
 
 	case cfg.Server.TempFolder != "":
 		logger.Log.Infof("Initializing file repository")

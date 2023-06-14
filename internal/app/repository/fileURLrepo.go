@@ -106,3 +106,7 @@ func (s *FileURLrepo) Read() error {
 func (s FileURLrepo) OriginalURL(shortURL string) (string, error) {
 	return s.storage[shortURL], nil
 }
+
+func (s FileURLrepo) BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
+	return []models.BatchURLResponce{}, nil
+}

@@ -3,12 +3,16 @@ package service
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
+	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 )
 
@@ -68,4 +72,44 @@ func (u *urlService) ExpandURL(path string) (string, error) {
 		return "", fmt.Errorf("URL path '%s' not found", path)
 	}
 	return url, nil
+}
+
+func (u *urlService) HandleBatchInsert(data io.ReadCloser) ([]models.BatchURLResponce, error) {
+	var parsedReq []models.BatchURLRequest
+
+	decoder := json.NewDecoder(data)
+	err := decoder.Decode(&parsedReq)
+	if err != nil {
+		logger.Log.Infof("Failed to decode json")
+		return []models.BatchURLResponce{}, err
+	}
+
+	var tempURLRequests []models.TempURLBatchRequest
+
+	for _, req := range parsedReq {
+		shortURL, err := u.ShortenURL(req.OriginalURL)
+		if err != nil {
+			logger.Log.Infof("Failed to shorten URL")
+			continue
+		}
+		tempURLRequests = append(tempURLRequests, models.TempURLBatchRequest{CorrelationID: req.CorrelationID, ShortURL: shortURL, OriginalURL: req.OriginalURL})
+	}
+
+	switch {
+	case u.config.DataBase.ConnectionStr != "":
+		res, err := u.Repo.BatchCreate(tempURLRequests)
+		if err != nil {
+			return []models.BatchURLResponce{}, err
+		}
+		return res, nil
+	default:
+		for _, req := range tempURLRequests {
+			err := u.Repo.Create(req.ShortURL, req.OriginalURL)
+			if err != nil {
+				return []models.BatchURLResponce{}, err
+			}
+
+		}
+		return []models.BatchURLResponce{}, nil
+	}
 }

@@ -7,6 +7,7 @@ package mocks
 import (
 	reflect "reflect"
 
+	models "github.com/MrTomSawyer/url-shortener/internal/app/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -31,6 +32,21 @@ func NewMockRepoHandler(ctrl *gomock.Controller) *MockRepoHandler {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRepoHandler) EXPECT() *MockRepoHandlerMockRecorder {
 	return m.recorder
+}
+
+// BatchCreate mocks base method.
+func (m *MockRepoHandler) BatchCreate(arg0 []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BatchCreate", arg0)
+	ret0, _ := ret[0].([]models.BatchURLResponce)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BatchCreate indicates an expected call of BatchCreate.
+func (mr *MockRepoHandlerMockRecorder) BatchCreate(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchCreate", reflect.TypeOf((*MockRepoHandler)(nil).BatchCreate), arg0)
 }
 
 // Create mocks base method.
