@@ -71,6 +71,9 @@ func (u *urlService) ExpandURL(path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("URL path '%s' not found", path)
 	}
+	if url == "" {
+		return "", apperrors.ErrNotFound
+	}
 	return url, nil
 }
 
