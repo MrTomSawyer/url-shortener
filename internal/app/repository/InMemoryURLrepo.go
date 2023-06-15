@@ -24,3 +24,12 @@ func (i *InMemoryURLRepo) OriginalURL(shortURL string) (string, error) {
 func (i *InMemoryURLRepo) BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
 	return []models.BatchURLResponce{}, nil
 }
+
+func (i *InMemoryURLRepo) GetAll() ([]models.URLJsonResponse, error) {
+	var response []models.URLJsonResponse
+
+	for key, value := range i.storage {
+		response = append(response, models.URLJsonResponse{ShortURL: key, OriginalURL: value})
+	}
+	return response, nil
+}

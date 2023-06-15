@@ -98,3 +98,31 @@ func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest) ([]model
 	}
 	return response, nil
 }
+
+func (u PostgresURLrepo) GetAll() ([]models.URLJsonResponse, error) {
+	ctx, cancel := context.WithTimeout(u.ctx, 30000*time.Millisecond)
+	defer cancel()
+
+	query := fmt.Sprintf("SELECT shorturl, originalurl FROM %s", u.Table)
+	rows, err := u.Postgres.QueryContext(ctx, query)
+	if err != nil {
+		return []models.URLJsonResponse{}, err
+	}
+	defer rows.Close()
+
+	var responce []models.URLJsonResponse
+	for rows.Next() {
+		var urlResp models.URLJsonResponse
+		err := rows.Scan(&urlResp.ShortURL, &urlResp.OriginalURL)
+		if err != nil {
+			return []models.URLJsonResponse{}, err
+		}
+		responce = append(responce, urlResp)
+	}
+
+	if err = rows.Err(); err != nil {
+		return []models.URLJsonResponse{}, err
+	}
+
+	return responce, nil
+}

@@ -63,6 +63,21 @@ func (mr *MockRepoHandlerMockRecorder) Create(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockRepoHandler)(nil).Create), arg0, arg1)
 }
 
+// GetAll mocks base method.
+func (m *MockRepoHandler) GetAll() ([]models.URLJsonResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAll")
+	ret0, _ := ret[0].([]models.URLJsonResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAll indicates an expected call of GetAll.
+func (mr *MockRepoHandlerMockRecorder) GetAll() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockRepoHandler)(nil).GetAll))
+}
+
 // OriginalURL mocks base method.
 func (m *MockRepoHandler) OriginalURL(arg0 string) (string, error) {
 	m.ctrl.T.Helper()

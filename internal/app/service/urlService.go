@@ -116,3 +116,17 @@ func (u *urlService) HandleBatchInsert(data io.ReadCloser) ([]models.BatchURLRes
 		return []models.BatchURLResponce{}, nil
 	}
 }
+
+func (u *urlService) GetAll() (string, error) {
+	urls, err := u.Repo.GetAll()
+	if err != nil {
+		return "", nil
+	}
+
+	jsonData, err := json.Marshal(urls)
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonData), nil
+}

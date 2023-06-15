@@ -110,3 +110,12 @@ func (s FileURLrepo) OriginalURL(shortURL string) (string, error) {
 func (s FileURLrepo) BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
 	return []models.BatchURLResponce{}, nil
 }
+
+func (s FileURLrepo) GetAll() ([]models.URLJsonResponse, error) {
+	var response []models.URLJsonResponse
+
+	for key, value := range s.storage {
+		response = append(response, models.URLJsonResponse{ShortURL: key, OriginalURL: value})
+	}
+	return response, nil
+}

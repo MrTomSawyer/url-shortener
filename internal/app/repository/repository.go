@@ -13,6 +13,7 @@ type RepoHandler interface {
 	Create(shortURL, originalURL string) error
 	OriginalURL(shortURL string) (string, error)
 	BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error)
+	GetAll() ([]models.URLJsonResponse, error)
 }
 
 type RepositoryContainer struct {
