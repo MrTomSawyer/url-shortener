@@ -23,7 +23,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 			logger.Log.Info("Creating new cookie")
 			c := createUUIDCookie(h)
 			ctx.SetCookie("user_id", c, 0, "/", "", false, true)
-			ctx.Next()
+			return
 		}
 
 		if cookie == "" {
