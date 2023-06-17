@@ -2,20 +2,23 @@ package service
 
 import (
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
+	"github.com/jmoiron/sqlx"
 )
 
 type ServiceContainer struct {
-	URL urlService
+	URL *urlService
+	DB  *sqlx.DB
 }
 
-func NewServiceContainer(repo map[string]string, config config.AppConfig, storage *Storage) (*ServiceContainer, error) {
+func NewServiceContainer(repo *repository.RepositoryContainer, config config.AppConfig) (*ServiceContainer, error) {
 	URLService := urlService{
-		repo:    repo,
-		config:  config,
-		storage: storage,
+		Repo:   repo.URLrepo,
+		config: config,
 	}
 
 	return &ServiceContainer{
-		URL: URLService,
+		URL: &URLService,
+		DB:  repo.Postgres,
 	}, nil
 }

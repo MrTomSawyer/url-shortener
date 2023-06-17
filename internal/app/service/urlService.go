@@ -3,59 +3,116 @@ package service
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"strconv"
 
+	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/MrTomSawyer/url-shortener/internal/app/models"
+	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 )
 
 type urlService struct {
-	repo    map[string]string
-	config  config.AppConfig
-	storage *Storage
+	Repo   repository.RepoHandler
+	config config.AppConfig
+}
+
+func (u *urlService) ShortenURLHandler(body string) (string, error) {
+	shortPath, err := u.ShortenURL(body)
+	if err != nil {
+		return "", err
+	}
+
+	err = u.Repo.Create(shortPath, body)
+	if err != nil {
+		var urlConflictError *apperrors.URLConflict
+		if errors.As(err, &urlConflictError) {
+			return fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, urlConflictError.Value), err
+		}
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, shortPath), nil
 }
 
 func (u *urlService) ShortenURL(body string) (string, error) {
 	hasher := md5.New()
 	hasher.Write([]byte(body))
-	hash := hex.EncodeToString(hasher.Sum(nil))[:8]
+	shortPath := hex.EncodeToString(hasher.Sum(nil))[:8]
 
-	var shortURL string
-	if _, ok := u.repo[hash]; !ok {
-		u.repo[hash] = body
-		shortURL = fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, hash)
-	} else {
+	val, err := u.Repo.OriginalURL(shortPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to check if such short url value presents: %v", err)
+	}
+	if val != "" {
 		counter := 1
 		for {
-			newHash := hash + strconv.Itoa(counter)
-			if _, ok := u.repo[newHash]; !ok {
-				u.repo[newHash] = body
-				shortURL = fmt.Sprintf("%s/%s", u.config.Server.DefaultAddr, newHash)
+			newShortPath := shortPath + strconv.Itoa(counter)
+			val, err := u.Repo.OriginalURL(newShortPath)
+			if err != nil {
+				return "", fmt.Errorf("failed to check if such short url value presents: %v", err)
+			}
+			if val == "" {
+				shortPath = newShortPath
 				break
 			}
 			counter++
 		}
 	}
-
-	uj := models.URLJson{
-		UUID:        u.storage.largestUUID + 1,
-		ShortURL:    shortURL,
-		OriginalURL: body,
-	}
-	err := u.storage.Write(&uj)
-	if err != nil {
-		fmt.Println("Failed to write data to file", err)
-	}
-	u.storage.largestUUID++
-
-	return shortURL, nil
+	return shortPath, nil
 }
 
 func (u *urlService) ExpandURL(path string) (string, error) {
-	if value, ok := u.repo[path]; ok {
-		return value, nil
-	} else {
+	url, err := u.Repo.OriginalURL(path)
+	if err != nil {
 		return "", fmt.Errorf("URL path '%s' not found", path)
+	}
+	if url == "" {
+		return "", apperrors.ErrNotFound
+	}
+	return url, nil
+}
+
+func (u *urlService) HandleBatchInsert(data io.ReadCloser) ([]models.BatchURLResponce, error) {
+	var parsedReq []models.BatchURLRequest
+
+	decoder := json.NewDecoder(data)
+	err := decoder.Decode(&parsedReq)
+	if err != nil {
+		logger.Log.Infof("Failed to decode json")
+		return []models.BatchURLResponce{}, err
+	}
+
+	var tempURLRequests []models.TempURLBatchRequest
+
+	for _, req := range parsedReq {
+		shortURL, err := u.ShortenURL(req.OriginalURL)
+		if err != nil {
+			logger.Log.Infof("Failed to shorten URL")
+			continue
+		}
+		tempURLRequests = append(tempURLRequests, models.TempURLBatchRequest{CorrelationID: req.CorrelationID, ShortURL: shortURL, OriginalURL: req.OriginalURL})
+	}
+
+	switch {
+	case u.config.DataBase.ConnectionStr != "":
+		res, err := u.Repo.BatchCreate(tempURLRequests)
+		if err != nil {
+			return []models.BatchURLResponce{}, err
+		}
+		return res, nil
+	default:
+		for _, req := range tempURLRequests {
+			err := u.Repo.Create(req.ShortURL, req.OriginalURL)
+			if err != nil {
+				return []models.BatchURLResponce{}, err
+			}
+
+		}
+		return []models.BatchURLResponce{}, nil
 	}
 }

@@ -1,11 +1,17 @@
 package main
 
 import (
+	"context"
+
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/handler"
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
+	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 	"github.com/MrTomSawyer/url-shortener/internal/app/server"
 	"github.com/MrTomSawyer/url-shortener/internal/app/service"
-	"go.uber.org/zap"
+	"github.com/jmoiron/sqlx"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -15,33 +21,38 @@ func main() {
 		panic(err)
 	}
 
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-	defer logger.Sync()
-	sugar := logger.Sugar()
-
-	repo := make(map[string]string)
-
-	storage, err := service.NewStorage(appConfig.Server.TempFolder)
+	err = logger.InitLogger()
 	if err != nil {
 		panic(err)
 	}
 
-	err = storage.Read(&repo)
+	var db *sqlx.DB
+	if appConfig.DataBase.ConnectionStr != "" {
+		db, err = repository.NewPostgresDB(appConfig.DataBase.ConnectionStr)
+		if err != nil {
+			panic(err)
+		}
+		defer db.Close()
+	}
+
+	urlRepo, err := repository.InitRepository(context.Background(), appConfig, db)
 	if err != nil {
 		panic(err)
 	}
 
-	services, err := service.NewServiceContainer(repo, appConfig, storage)
+	repo, err := repository.NewRepositoryContainer(db, urlRepo)
 	if err != nil {
 		panic(err)
 	}
-	handler := handler.NewHandler(services)
+
+	services, err := service.NewServiceContainer(repo, appConfig)
+	if err != nil {
+		panic(err)
+	}
+	handler := handler.NewHandler(services, appConfig)
 	server := new(server.Server)
 
-	if err := server.Run(appConfig.Server.ServerAddr, handler.InitRoutes(sugar)); err != nil {
+	if err := server.Run(appConfig.Server.ServerAddr, handler.InitRoutes()); err != nil {
 		panic(err)
 	}
 }

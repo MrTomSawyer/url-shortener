@@ -8,21 +8,25 @@ import (
 	"testing"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
+	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
+	"github.com/MrTomSawyer/url-shortener/internal/app/repository/mocks"
 	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
+	"github.com/jmoiron/sqlx"
 )
 
 func TestExpandURL(t *testing.T) {
 	cfg := config.AppConfig{}
 	cfg.Server.DefaultAddr = "http://localhost:8080"
 	cfg.Server.ServerAddr = ":8080"
-	cfg.Server.TempFolder = "/tmp/short-url-db.json"
+	cfg.Server.TempFolder = ""
+	cfg.DataBase.ConnectionStr = ""
 
-	var testVault = map[string]string{"e9db20b2": "https://yandex.ru"}
-	storage, err := service.NewStorage(cfg.Server.TempFolder)
+	err := logger.InitLogger()
 	if err != nil {
-		fmt.Printf("Failed to create test storage: %v", err)
-		return
+		panic(err)
 	}
 
 	type want struct {
@@ -61,20 +65,34 @@ func TestExpandURL(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			m := mocks.NewMockRepoHandler(ctrl)
+			m.EXPECT().OriginalURL(test.id).Return(test.want.response, nil)
+
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 
 			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(""))
 			c.AddParam("id", test.id)
 
-			serviceContainer, err := service.NewServiceContainer(testVault, cfg, storage)
+			var db *sqlx.DB
+			repo, err := repository.NewRepositoryContainer(db, m)
+			if err != nil {
+				fmt.Printf("Error creating repo container: %v", err)
+			}
+
+			serviceContainer, err := service.NewServiceContainer(repo, cfg)
 			if err != nil {
 				fmt.Printf("Error creating service container: %v", err)
 			}
+
 			h := Handler{
 				services: serviceContainer,
 			}
 			h.ExpandURL(c)
+
 			if c.Writer.Status() != test.want.code {
 				t.Errorf("got status code %d, want %d", w.Code, test.want.code)
 			}

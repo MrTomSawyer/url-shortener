@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -8,9 +9,12 @@ import (
 	"testing"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
+	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 	"github.com/MrTomSawyer/url-shortener/internal/app/service"
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
+	"github.com/jmoiron/sqlx"
 )
 
 func TestShortenURLjson(t *testing.T) {
@@ -19,11 +23,9 @@ func TestShortenURLjson(t *testing.T) {
 	cfg.Server.ServerAddr = ":8080"
 	cfg.Server.TempFolder = "/tmp/short-url-db.json"
 
-	testVault := make(map[string]string)
-	storage, err := service.NewStorage(cfg.Server.TempFolder)
+	err := logger.InitLogger()
 	if err != nil {
-		fmt.Printf("Failed to create test storage: %v", err)
-		return
+		panic(err)
 	}
 
 	type want struct {
@@ -75,7 +77,18 @@ func TestShortenURLjson(t *testing.T) {
 			}
 
 			c.Request, _ = http.NewRequest(test.method, test.url, strings.NewReader(string(bodyStr)))
-			serviceContainer, err := service.NewServiceContainer(testVault, cfg, storage)
+
+			var db *sqlx.DB
+			urlRepo, err := repository.InitRepository(context.Background(), cfg, db)
+			if err != nil {
+				fmt.Printf("Error creating initializing repo: %v", err)
+			}
+			repo, err := repository.NewRepositoryContainer(db, urlRepo)
+			if err != nil {
+				fmt.Printf("Error creating repo container: %v", err)
+			}
+
+			serviceContainer, err := service.NewServiceContainer(repo, cfg)
 			if err != nil {
 				fmt.Printf("Error creating service container: %v", err)
 			}
