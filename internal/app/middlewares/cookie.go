@@ -49,7 +49,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 
 		if signature != expectedSignature {
 			c, _ := createUUIDCookie(h)
-			ctx.SetCookie("user_id", c, 0, "/", "", false, true)
+			ctx.SetCookie("user_id", c, 30*24*3600, "/", "", false, true)
 		}
 		ctx.Set("user_id", userID)
 		ctx.Next()
