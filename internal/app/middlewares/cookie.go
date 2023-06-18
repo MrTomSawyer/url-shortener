@@ -7,6 +7,7 @@ import (
 	"hash"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/gin-gonic/gin"
@@ -19,11 +20,13 @@ func CookieHandler(secret string) gin.HandlerFunc {
 		logger.Log.Info("All cookies:", ctx.Request.Cookies())
 		cookie, err := ctx.Cookie("user_id")
 		logger.Log.Info("Cookie: %s", cookie)
+		maxAge := time.Now().Add(24 * time.Hour)
 		if err != nil {
 			logger.Log.Info("Cookie err: %s", err)
 			logger.Log.Info("Creating new cookie")
 			c, userID := createUUIDCookie(h)
-			ctx.SetCookie("user_id", c, 30*24*3600, "/", "", false, true)
+
+			ctx.SetCookie("user_id", c, int(maxAge.Unix()), "/", "", false, true)
 			ctx.Set("user_id", userID)
 			return
 		}
@@ -49,7 +52,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 
 		if signature != expectedSignature {
 			c, _ := createUUIDCookie(h)
-			ctx.SetCookie("user_id", c, 30*24*3600, "/", "", false, true)
+			ctx.SetCookie("user_id", c, int(maxAge.Unix()), "/", "", false, true)
 		}
 		ctx.Set("user_id", userID)
 		ctx.Next()
