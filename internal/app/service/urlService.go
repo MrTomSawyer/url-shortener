@@ -21,13 +21,13 @@ type urlService struct {
 	config config.AppConfig
 }
 
-func (u *urlService) ShortenURLHandler(body string) (string, error) {
+func (u *urlService) ShortenURLHandler(body string, userID string) (string, error) {
 	shortPath, err := u.ShortenURL(body)
 	if err != nil {
 		return "", err
 	}
 
-	err = u.Repo.Create(shortPath, body)
+	err = u.Repo.Create(shortPath, body, userID)
 	if err != nil {
 		var urlConflictError *apperrors.URLConflict
 		if errors.As(err, &urlConflictError) {
@@ -111,7 +111,7 @@ func (u *urlService) HandleBatchInsert(data io.ReadCloser, userID string) ([]mod
 		return res, nil
 	default:
 		for _, req := range tempURLRequests {
-			err := u.Repo.Create(req.ShortURL, req.OriginalURL)
+			err := u.Repo.Create(req.ShortURL, req.OriginalURL, userID)
 			if err != nil {
 				return []models.BatchURLResponce{}, err
 			}

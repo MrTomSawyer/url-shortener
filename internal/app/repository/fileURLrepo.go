@@ -30,7 +30,7 @@ func NewFileURLrepo(path string) (*FileURLrepo, error) {
 	return &fileRepo, nil
 }
 
-func (s *FileURLrepo) Create(shortURL, originalURL string) error {
+func (s *FileURLrepo) Create(shortURL, originalURL, userID string) error {
 	logger.Log.Infof("Writing to file... ShortURL: %s, OriginalURL: %s", shortURL, originalURL)
 
 	uj := models.URLJson{

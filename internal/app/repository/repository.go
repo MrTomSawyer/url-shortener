@@ -10,7 +10,7 @@ import (
 )
 
 type RepoHandler interface {
-	Create(shortURL, originalURL string) error
+	Create(shortURL, originalURL, userID string) error
 	OriginalURL(shortURL string) (string, error)
 	BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error)
 	GetAll(userid string) ([]models.URLJsonResponse, error)

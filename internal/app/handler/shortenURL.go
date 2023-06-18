@@ -3,15 +3,21 @@ package handler
 import (
 	"errors"
 	"fmt"
-	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
 	"io"
 	"net/http"
+
+	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) ShortenURL(c *gin.Context) {
 	body := c.Request.Body
+	userID, exists := c.Get("user_id")
+	if !exists {
+		fmt.Println("Failed to get user_id")
+	}
+	userIDStr, _ := userID.(string)
 
 	defer func(body io.ReadCloser) {
 		if err := body.Close(); err != nil {
@@ -30,7 +36,7 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 	}
 
 	bodyStr := string(data)
-	shortURL, err := h.services.URL.ShortenURLHandler(bodyStr)
+	shortURL, err := h.services.URL.ShortenURLHandler(bodyStr, userIDStr)
 	if err != nil {
 		var urlConflictError *apperrors.URLConflict
 		if errors.As(err, &urlConflictError) {

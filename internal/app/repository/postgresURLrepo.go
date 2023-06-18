@@ -30,12 +30,12 @@ func NewPostgresURLrepo(ctx context.Context, db *sqlx.DB, cfg config.AppConfig) 
 	}
 }
 
-func (u PostgresURLrepo) Create(shortURL, originalURL string) error {
+func (u PostgresURLrepo) Create(shortURL, originalURL, userID string) error {
 	cxt, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
 	defer cancel()
 
-	query := fmt.Sprintf("INSERT INTO %s (shortURL, OriginalURL) VALUES ($1, $2) ON CONFLICT (OriginalURL) DO NOTHING RETURNING id", u.Table)
-	row := u.Postgres.QueryRowContext(cxt, query, shortURL, originalURL)
+	query := fmt.Sprintf("INSERT INTO %s (shortURL, OriginalURL, userID) VALUES ($1, $2, $3) ON CONFLICT (OriginalURL) DO NOTHING RETURNING id", u.Table)
+	row := u.Postgres.QueryRowContext(cxt, query, shortURL, originalURL, userID)
 	var res string
 	err := row.Scan(&res)
 	if err != nil {

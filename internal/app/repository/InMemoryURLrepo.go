@@ -12,7 +12,7 @@ func NewInMemoryURLRepo() *InMemoryURLRepo {
 	}
 }
 
-func (i *InMemoryURLRepo) Create(shortURL, originalURL string) error {
+func (i *InMemoryURLRepo) Create(shortURL, originalURL, userID string) error {
 	i.storage[shortURL] = originalURL
 	return nil
 }
