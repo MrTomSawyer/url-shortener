@@ -23,12 +23,12 @@ func CookieHandler(secret string) gin.HandlerFunc {
 		maxAge := time.Now().Add(24 * time.Hour)
 		if err != nil {
 			logger.Log.Info("Cookie err: %s", err)
-			logger.Log.Info("Creating new cookie")
 			c, userID := createUUIDCookie(h)
+			logger.Log.Info("Creating userid for a cookie - ", userID)
 
 			ctx.SetCookie("user_id", c, int(maxAge.Unix()), "/", "", false, true)
 			ctx.Set("user_id", userID)
-			return
+			ctx.Next()
 		}
 
 		if cookie == "" {
@@ -51,8 +51,12 @@ func CookieHandler(secret string) gin.HandlerFunc {
 		expectedSignature := hex.EncodeToString(h.Sum(nil))
 
 		if signature != expectedSignature {
-			c, _ := createUUIDCookie(h)
+			logger.Log.Info("Cookie signature mismatch: %s", err)
+			c, userID := createUUIDCookie(h)
+			logger.Log.Info("Creating userid for a cookie - ", userID)
 			ctx.SetCookie("user_id", c, int(maxAge.Unix()), "/", "", false, true)
+			ctx.Set("user_id", userID)
+			ctx.Next()
 		}
 		ctx.Set("user_id", userID)
 		ctx.Next()

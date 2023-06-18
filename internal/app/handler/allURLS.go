@@ -8,8 +8,14 @@ import (
 )
 
 func (h Handler) GetAll(c *gin.Context) {
-	userid, _ := c.Get("user_id")
-	useridStr, _ := userid.(string)
+	userid, exists := c.Get("user_id")
+	if !exists {
+		logger.Log.Infof("GetAll: no userid found")
+	}
+	useridStr, ok := userid.(string)
+	if !ok {
+		logger.Log.Infof("FAiled to convert userid to string")
+	}
 
 	logger.Log.Infof("GetAll user id: %s", useridStr)
 
