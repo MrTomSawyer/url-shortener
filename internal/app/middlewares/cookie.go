@@ -23,7 +23,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 			logger.Log.Info("Cookie err: %s", err)
 			logger.Log.Info("Creating new cookie")
 			c, userID := createUUIDCookie(h)
-			ctx.SetCookie("user_id", c, 0, "/", "", false, true)
+			ctx.SetCookie("user_id", c, 30*24*3600, "/", "", false, true)
 			ctx.Set("user_id", userID)
 			return
 		}
