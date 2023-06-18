@@ -15,7 +15,7 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 	if !exists {
 		fmt.Println("Failed to get user_id")
 	}
-	userIdStr, _ := userID.(string)
+	userIDStr, _ := userID.(string)
 
 	logger.Log.Infof("batchURLinsert user id: ", userID)
 
@@ -25,7 +25,7 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 		}
 	}(body)
 
-	res, err := h.services.URL.HandleBatchInsert(body, userIdStr)
+	res, err := h.services.URL.HandleBatchInsert(body, userIDStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 	}

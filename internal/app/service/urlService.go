@@ -77,7 +77,7 @@ func (u *urlService) ExpandURL(path string) (string, error) {
 	return url, nil
 }
 
-func (u *urlService) HandleBatchInsert(data io.ReadCloser, userId string) ([]models.BatchURLResponce, error) {
+func (u *urlService) HandleBatchInsert(data io.ReadCloser, userID string) ([]models.BatchURLResponce, error) {
 	var parsedReq []models.BatchURLRequest
 
 	decoder := json.NewDecoder(data)
@@ -104,7 +104,7 @@ func (u *urlService) HandleBatchInsert(data io.ReadCloser, userId string) ([]mod
 
 	switch {
 	case u.config.DataBase.ConnectionStr != "":
-		res, err := u.Repo.BatchCreate(tempURLRequests, userId)
+		res, err := u.Repo.BatchCreate(tempURLRequests, userID)
 		if err != nil {
 			return []models.BatchURLResponce{}, err
 		}
