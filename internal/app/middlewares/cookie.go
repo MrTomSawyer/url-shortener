@@ -18,8 +18,9 @@ func CookieHandler(secret string) gin.HandlerFunc {
 		h := hmac.New(sha256.New, []byte(secret))
 
 		cookie, err := ctx.Cookie("user_id")
-		logger.Log.Info("Cookie: ", cookie, err)
+		logger.Log.Info("Cookie: %s", cookie)
 		if err != nil {
+			logger.Log.Info("Cookie err: %s", err)
 			logger.Log.Info("Creating new cookie")
 			c, userID := createUUIDCookie(h)
 			ctx.SetCookie("user_id", c, 0, "/", "", false, true)
