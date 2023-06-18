@@ -104,7 +104,7 @@ func (u PostgresURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error)
 	defer cancel()
 
 	query := fmt.Sprintf("SELECT shorturl, originalurl FROM %s WHERE userid=$1", u.Table)
-	logger.Log.Infof("GetAll query: ", query)
+	logger.Log.Infof("GetAll query: %s", query)
 
 	rows, err := u.Postgres.QueryContext(ctx, query, userid)
 	if err != nil {

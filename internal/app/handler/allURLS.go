@@ -11,7 +11,7 @@ func (h Handler) GetAll(c *gin.Context) {
 	userid, _ := c.Get("user_id")
 	useridStr, _ := userid.(string)
 
-	logger.Log.Infof("GetAll user id: ", useridStr)
+	logger.Log.Infof("GetAll user id: %s", useridStr)
 
 	response, err := h.services.URL.GetAll(useridStr)
 	if err != nil {
@@ -20,6 +20,7 @@ func (h Handler) GetAll(c *gin.Context) {
 	}
 	if len(response) == 0 {
 		c.JSON(http.StatusNoContent, nil)
+		return
 	}
 	c.JSON(http.StatusOK, response)
 }

@@ -17,7 +17,7 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 	}
 	userIDStr, _ := userID.(string)
 
-	logger.Log.Infof("batchURLinsert user id: ", userID)
+	logger.Log.Infof("batchURLinsert user id: %s", userID)
 
 	defer func(body io.ReadCloser) {
 		if err := body.Close(); err != nil {
