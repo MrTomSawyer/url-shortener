@@ -21,8 +21,9 @@ func CookieHandler(secret string) gin.HandlerFunc {
 		logger.Log.Info("Cookie: ", cookie, err)
 		if err != nil {
 			logger.Log.Info("Creating new cookie")
-			c := createUUIDCookie(h)
+			c, userID := createUUIDCookie(h)
 			ctx.SetCookie("user_id", c, 0, "/", "", false, true)
+			ctx.Set("user_id", userID)
 			return
 		}
 
@@ -46,17 +47,17 @@ func CookieHandler(secret string) gin.HandlerFunc {
 		expectedSignature := hex.EncodeToString(h.Sum(nil))
 
 		if signature != expectedSignature {
-			c := createUUIDCookie(h)
+			c, _ := createUUIDCookie(h)
 			ctx.SetCookie("user_id", c, 0, "/", "", false, true)
 		}
-
+		ctx.Set("user_id", userID)
 		ctx.Next()
 	}
 }
 
-func createUUIDCookie(h hash.Hash) string {
+func createUUIDCookie(h hash.Hash) (string, string) {
 	uuid := uuid.New()
 	h.Write([]byte(uuid.String()))
 	signature := hex.EncodeToString(h.Sum(nil))
-	return uuid.String() + "|" + signature
+	return uuid.String() + "|" + signature, uuid.String()
 }

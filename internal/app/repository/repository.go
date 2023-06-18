@@ -12,8 +12,8 @@ import (
 type RepoHandler interface {
 	Create(shortURL, originalURL string) error
 	OriginalURL(shortURL string) (string, error)
-	BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error)
-	GetAll() ([]models.URLJsonResponse, error)
+	BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error)
+	GetAll(userid string) ([]models.URLJsonResponse, error)
 }
 
 type RepositoryContainer struct {
@@ -39,6 +39,7 @@ func InitRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (Rep
 				id SERIAL PRIMARY KEY,
 				correlationid TEXT,
 				shorturl TEXT,
+				userid TEXT,
 				originalurl TEXT
 			);`
 

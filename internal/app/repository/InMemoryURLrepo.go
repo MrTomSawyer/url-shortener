@@ -21,11 +21,11 @@ func (i *InMemoryURLRepo) OriginalURL(shortURL string) (string, error) {
 	return i.storage[shortURL], nil
 }
 
-func (i *InMemoryURLRepo) BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
+func (i *InMemoryURLRepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
 	return []models.BatchURLResponce{}, nil
 }
 
-func (i *InMemoryURLRepo) GetAll() ([]models.URLJsonResponse, error) {
+func (i *InMemoryURLRepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	var response []models.URLJsonResponse
 
 	for key, value := range i.storage {

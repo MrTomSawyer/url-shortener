@@ -107,11 +107,11 @@ func (s FileURLrepo) OriginalURL(shortURL string) (string, error) {
 	return s.storage[shortURL], nil
 }
 
-func (s FileURLrepo) BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
+func (s FileURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
 	return []models.BatchURLResponce{}, nil
 }
 
-func (s FileURLrepo) GetAll() ([]models.URLJsonResponse, error) {
+func (s FileURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	var response []models.URLJsonResponse
 
 	for key, value := range s.storage {

@@ -77,7 +77,7 @@ func (u *urlService) ExpandURL(path string) (string, error) {
 	return url, nil
 }
 
-func (u *urlService) HandleBatchInsert(data io.ReadCloser) ([]models.BatchURLResponce, error) {
+func (u *urlService) HandleBatchInsert(data io.ReadCloser, userId string) ([]models.BatchURLResponce, error) {
 	var parsedReq []models.BatchURLRequest
 
 	decoder := json.NewDecoder(data)
@@ -95,12 +95,16 @@ func (u *urlService) HandleBatchInsert(data io.ReadCloser) ([]models.BatchURLRes
 			logger.Log.Infof("Failed to shorten URL")
 			continue
 		}
-		tempURLRequests = append(tempURLRequests, models.TempURLBatchRequest{CorrelationID: req.CorrelationID, ShortURL: shortURL, OriginalURL: req.OriginalURL})
+		tempURLRequests = append(tempURLRequests, models.TempURLBatchRequest{
+			CorrelationID: req.CorrelationID,
+			ShortURL:      shortURL,
+			OriginalURL:   req.OriginalURL,
+		})
 	}
 
 	switch {
 	case u.config.DataBase.ConnectionStr != "":
-		res, err := u.Repo.BatchCreate(tempURLRequests)
+		res, err := u.Repo.BatchCreate(tempURLRequests, userId)
 		if err != nil {
 			return []models.BatchURLResponce{}, err
 		}
@@ -117,8 +121,8 @@ func (u *urlService) HandleBatchInsert(data io.ReadCloser) ([]models.BatchURLRes
 	}
 }
 
-func (u *urlService) GetAll() ([]models.URLJsonResponse, error) {
-	urls, err := u.Repo.GetAll()
+func (u *urlService) GetAll(userid string) ([]models.URLJsonResponse, error) {
+	urls, err := u.Repo.GetAll(userid)
 	if err != nil {
 		return []models.URLJsonResponse{}, nil
 	}

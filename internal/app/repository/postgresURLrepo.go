@@ -67,7 +67,7 @@ func (u PostgresURLrepo) OriginalURL(shortURL string) (string, error) {
 	return originalURL, nil
 }
 
-func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
+func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
 	tx, err := u.Postgres.Begin()
 	if err != nil {
 		logger.Log.Infof("Failed to start transaction")
@@ -77,8 +77,8 @@ func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest) ([]model
 	var response []models.BatchURLResponce
 
 	for _, req := range data {
-		query := "INSERT INTO urls (correlationid, shorturl, originalurl) VALUES ($1, $2, $3)"
-		_, err = tx.Exec(query, req.CorrelationID, req.ShortURL, req.OriginalURL)
+		query := "INSERT INTO urls (correlationid, shorturl, originalurl, userid) VALUES ($1, $2, $3, $4)"
+		_, err = tx.Exec(query, req.CorrelationID, req.ShortURL, req.OriginalURL, userID)
 
 		if err != nil {
 			logger.Log.Infof("Failed to insert a shortened URL", err)
@@ -99,12 +99,12 @@ func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest) ([]model
 	return response, nil
 }
 
-func (u PostgresURLrepo) GetAll() ([]models.URLJsonResponse, error) {
+func (u PostgresURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	ctx, cancel := context.WithTimeout(u.ctx, 30000*time.Millisecond)
 	defer cancel()
 
-	query := fmt.Sprintf("SELECT shorturl, originalurl FROM %s", u.Table)
-	rows, err := u.Postgres.QueryContext(ctx, query)
+	query := fmt.Sprintf("SELECT shorturl, originalurl FROM %s WHERE userid=$1", u.Table)
+	rows, err := u.Postgres.QueryContext(ctx, query, userid)
 	if err != nil {
 		return []models.URLJsonResponse{}, err
 	}
@@ -117,6 +117,7 @@ func (u PostgresURLrepo) GetAll() ([]models.URLJsonResponse, error) {
 		if err != nil {
 			return []models.URLJsonResponse{}, err
 		}
+		urlResp.ShortURL = fmt.Sprintf("%s/%s", u.cfg.Server.DefaultAddr, urlResp.ShortURL)
 		responce = append(responce, urlResp)
 	}
 
