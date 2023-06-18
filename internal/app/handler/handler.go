@@ -24,7 +24,7 @@ func (h Handler) InitRoutes() *gin.Engine {
 	router.Use(
 		middlewares.LogReqResInfo(),
 		middlewares.DataCompressor(),
-		middlewares.CookieHandler(h.Cfg.Server.SecretKey, h.Cfg.Server.DefaultAddr),
+		middlewares.CookieHandler(h.Cfg.Server.SecretKey),
 	)
 
 	router.POST("/", h.ShortenURL)

@@ -13,17 +13,17 @@ import (
 	"github.com/google/uuid"
 )
 
-func CookieHandler(secret string, addr string) gin.HandlerFunc {
+func CookieHandler(secret string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		h := hmac.New(sha256.New, []byte(secret))
-
+		logger.Log.Info("All cookies:", ctx.Request.Cookies())
 		cookie, err := ctx.Cookie("user_id")
 		logger.Log.Info("Cookie: %s", cookie)
 		if err != nil {
 			logger.Log.Info("Cookie err: %s", err)
 			logger.Log.Info("Creating new cookie")
 			c, userID := createUUIDCookie(h)
-			ctx.SetCookie("user_id", c, 30*24*3600, "/", addr, false, true)
+			ctx.SetCookie("user_id", c, 30*24*3600, "/", "", false, true)
 			ctx.Set("user_id", userID)
 			return
 		}
@@ -49,7 +49,7 @@ func CookieHandler(secret string, addr string) gin.HandlerFunc {
 
 		if signature != expectedSignature {
 			c, _ := createUUIDCookie(h)
-			ctx.SetCookie("user_id", c, 30*24*3600, "/", addr, false, true)
+			ctx.SetCookie("user_id", c, 30*24*3600, "/", "", false, true)
 		}
 		ctx.Set("user_id", userID)
 		ctx.Next()
