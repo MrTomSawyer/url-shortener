@@ -5,16 +5,20 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/gin-gonic/gin"
 )
 
 func (h Handler) batchURLinsert(c *gin.Context) {
 	body := c.Request.Body
-	userId, exists := c.Get("user_id")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		fmt.Println("Failed to get user_id")
 	}
-	userIdStr, _ := userId.(string)
+	userIdStr, _ := userID.(string)
+
+	logger.Log.Infof("batchURLinsert user id: ", userID)
+
 	defer func(body io.ReadCloser) {
 		if err := body.Close(); err != nil {
 			fmt.Printf("Failed to close body: %v", err)
@@ -26,5 +30,6 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 	}
 
+	logger.Log.Infof("batchURLinsert response: ", res)
 	c.JSON(http.StatusCreated, res)
 }
