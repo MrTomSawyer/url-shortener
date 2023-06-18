@@ -28,7 +28,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 
 			ctx.SetCookie("user_id", c, int(maxAge.Unix()), "/", "", false, true)
 			ctx.Set("user_id", userID)
-			return
+			ctx.Next()
 		}
 
 		if cookie == "" {
@@ -56,7 +56,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 			logger.Log.Info("Creating userid for a cookie - ", userID)
 			ctx.SetCookie("user_id", c, int(maxAge.Unix()), "/", "", false, true)
 			ctx.Set("user_id", userID)
-			return
+			ctx.Next()
 		}
 		ctx.Set("user_id", userID)
 		ctx.Next()
