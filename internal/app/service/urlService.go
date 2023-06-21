@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"sync"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
+	"github.com/MrTomSawyer/url-shortener/internal/app/service/semaphore"
 )
 
 type urlService struct {
@@ -128,4 +130,33 @@ func (u *urlService) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	}
 
 	return urls, nil
+}
+
+func (u *urlService) DeleteAll(urls []string, userid string) {
+	var wg sync.WaitGroup
+	semaphore := semaphore.NewSemaphore(2)
+
+	resultCh := make(chan error, len(urls))
+
+	for _, url := range urls {
+		wg.Add(1)
+
+		go func(url string, userid string, resultCh chan error) {
+			semaphore.Acquire()
+			defer wg.Done()
+			defer semaphore.Release()
+
+			err := u.Repo.DeleteAll(url, userid)
+			if err != nil {
+				resultCh <- err
+			}
+
+		}(url, userid, resultCh)
+	}
+
+	for err := range resultCh {
+		fmt.Printf("error deleting url: %v", err)
+	}
+
+	wg.Wait()
 }

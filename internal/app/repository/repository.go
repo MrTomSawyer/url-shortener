@@ -14,6 +14,7 @@ type RepoHandler interface {
 	OriginalURL(shortURL string) (string, error)
 	BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error)
 	GetAll(userid string) ([]models.URLJsonResponse, error)
+	DeleteAll(shortURL string, userid string) error
 }
 
 type RepositoryContainer struct {
@@ -40,7 +41,8 @@ func InitRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (Rep
 				correlationid TEXT,
 				shorturl TEXT,
 				userid TEXT,
-				originalurl TEXT
+				originalurl TEXT,
+				isdeleted BOOLEAN DEFAULT false
 			);`
 
 		if _, err := db.ExecContext(ctx, createTableQuery); err != nil {

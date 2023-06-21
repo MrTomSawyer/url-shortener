@@ -100,7 +100,7 @@ func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID s
 }
 
 func (u PostgresURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
-	ctx, cancel := context.WithTimeout(u.ctx, 30000*time.Millisecond)
+	ctx, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
 	defer cancel()
 
 	query := fmt.Sprintf("SELECT shorturl, originalurl FROM %s WHERE userid=$1", u.Table)
@@ -128,4 +128,21 @@ func (u PostgresURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error)
 	}
 
 	return responce, nil
+}
+
+func (u PostgresURLrepo) DeleteAll(shortURL string, userid string) error {
+	ctx, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
+	defer cancel()
+
+	query := fmt.Sprintf("UPDATE %s SET isdeleted=true WHERE shorturl=$1 AND userid=$2", u.Table)
+	row := u.Postgres.QueryRowContext(ctx, query, shortURL, userid)
+	var res string
+	err := row.Scan(&res)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+		return err
+	}
+	return nil
 }

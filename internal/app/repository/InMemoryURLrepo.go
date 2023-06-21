@@ -33,3 +33,7 @@ func (i *InMemoryURLRepo) GetAll(userid string) ([]models.URLJsonResponse, error
 	}
 	return response, nil
 }
+
+func (i *InMemoryURLRepo) DeleteAll(shortURL string, userid string) error {
+	return nil
+}
