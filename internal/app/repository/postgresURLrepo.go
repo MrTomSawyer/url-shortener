@@ -54,15 +54,19 @@ func (u PostgresURLrepo) Create(shortURL, originalURL, userID string) error {
 }
 
 func (u PostgresURLrepo) OriginalURL(shortURL string) (string, error) {
-	cxt, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
+	cxt, cancel := context.WithTimeout(u.ctx, 2000000*time.Millisecond)
 	defer cancel()
 
-	query := fmt.Sprintf("SELECT originalurl from %s WHERE shorturl=$1", u.Table)
+	query := fmt.Sprintf("SELECT originalurl, isdeleted from %s WHERE shorturl=$1", u.Table)
 	row := u.Postgres.QueryRowContext(cxt, query, shortURL)
 	var originalURL string
-	err := row.Scan(&originalURL)
+	var isDeleted bool
+	err := row.Scan(&originalURL, &isDeleted)
 	if err != nil {
 		return "", nil
+	}
+	if isDeleted {
+		return "", apperrors.ErrURLDeleted
 	}
 	return originalURL, nil
 }
@@ -134,9 +138,13 @@ func (u PostgresURLrepo) DeleteAll(shortURL string, userid string) error {
 	ctx, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
 	defer cancel()
 
-	query := fmt.Sprintf("UPDATE %s SET isdeleted=true WHERE shorturl=$1 AND userid=$2", u.Table)
+	logger.Log.Infof("Deleting url of %s, userId id %s", shortURL, userid)
+
+	query := fmt.Sprintf("UPDATE %s SET isdeleted=true WHERE (shorturl=$1 AND userid=$2)", u.Table)
 	row := u.Postgres.QueryRowContext(ctx, query, shortURL, userid)
 	var res string
+
+	logger.Log.Infof("Deleting result: %s", res)
 	err := row.Scan(&res)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

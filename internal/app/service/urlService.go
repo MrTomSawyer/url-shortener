@@ -71,7 +71,7 @@ func (u *urlService) ShortenURL(body string) (string, error) {
 func (u *urlService) ExpandURL(path string) (string, error) {
 	url, err := u.Repo.OriginalURL(path)
 	if err != nil {
-		return "", fmt.Errorf("URL path '%s' not found", path)
+		return "", fmt.Errorf("URL path '%s' not found: %w", path, err)
 	}
 	if url == "" {
 		return "", apperrors.ErrNotFound
@@ -133,8 +133,10 @@ func (u *urlService) GetAll(userid string) ([]models.URLJsonResponse, error) {
 }
 
 func (u *urlService) DeleteAll(urls []string, userid string) {
+	logger.Log.Infof("URL Service. List of urls to delete: %v", urls)
+
 	var wg sync.WaitGroup
-	semaphore := semaphore.NewSemaphore(2)
+	s := semaphore.NewSemaphore(2)
 
 	resultCh := make(chan error, len(urls))
 
@@ -142,9 +144,9 @@ func (u *urlService) DeleteAll(urls []string, userid string) {
 		wg.Add(1)
 
 		go func(url string, userid string, resultCh chan error) {
-			semaphore.Acquire()
+			s.Acquire()
 			defer wg.Done()
-			defer semaphore.Release()
+			defer s.Release()
 
 			err := u.Repo.DeleteAll(url, userid)
 			if err != nil {
@@ -154,9 +156,13 @@ func (u *urlService) DeleteAll(urls []string, userid string) {
 		}(url, userid, resultCh)
 	}
 
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
+
 	for err := range resultCh {
 		fmt.Printf("error deleting url: %v", err)
 	}
 
-	wg.Wait()
 }
