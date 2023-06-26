@@ -39,6 +39,7 @@ func TestDeleteAll(t *testing.T) {
 		url    string
 		body   []byte
 		method string
+		userID string
 		want   want
 	}{
 		{
@@ -46,6 +47,7 @@ func TestDeleteAll(t *testing.T) {
 			url:    "localhost:8080/api/user/urls",
 			body:   []byte(`["e98192e1"]`),
 			method: "DELETE",
+			userID: "user",
 			want: want{
 				code: 202,
 			},
@@ -58,13 +60,14 @@ func TestDeleteAll(t *testing.T) {
 
 		m := mocks.NewMockRepoHandler(ctrl)
 
-		m.EXPECT().DeleteAll(gomock.Any(), gomock.Any()).Return(nil)
+		m.EXPECT().DeleteAll(gomock.Any(), test.userID).Return(nil)
 
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 
 		body := bytes.NewBuffer(test.body)
 		c.Request, _ = http.NewRequest(test.method, test.url, body)
+		c.Set("user_id", test.userID)
 
 		var db *sqlx.DB
 		repo, err := repository.NewRepositoryContainer(db, m)
@@ -80,7 +83,7 @@ func TestDeleteAll(t *testing.T) {
 		h := Handler{
 			services: serviceContainer,
 		}
-		h.batchURLinsert(c)
+		h.deleteAll(c)
 
 		assert.Equal(t, test.want.code, c.Writer.Status())
 	}
