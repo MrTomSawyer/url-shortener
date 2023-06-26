@@ -144,8 +144,8 @@ func (u PostgresURLrepo) DeleteAll(shortURL string, userid string) error {
 	row := u.Postgres.QueryRowContext(ctx, query, shortURL, userid)
 	var res string
 
-	logger.Log.Infof("Deleting result: %s", res)
 	err := row.Scan(&res)
+	logger.Log.Infof("Deleting result: %s", res)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
