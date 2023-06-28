@@ -8,14 +8,12 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"sync"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
 	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
-	"github.com/MrTomSawyer/url-shortener/internal/app/service/semaphore"
 )
 
 type urlService struct {
@@ -135,34 +133,32 @@ func (u *urlService) GetAll(userid string) ([]models.URLJsonResponse, error) {
 func (u *urlService) DeleteAll(urls []string, userid string) {
 	logger.Log.Infof("URL Service. List of urls to delete: %v", urls)
 
-	var wg sync.WaitGroup
-	s := semaphore.NewSemaphore(2)
+	doneCh := make(chan struct{})
+	resultCh := make(chan error)
+	deleteResCh := make(chan error, len(urls))
 
-	resultCh := make(chan error, len(urls))
-
+	// Fan-Out
 	for _, url := range urls {
-		wg.Add(1)
-
-		go func(url string, userid string, resultCh chan error) {
-			s.Acquire()
-			defer wg.Done()
-			defer s.Release()
-
+		go func(url string) {
 			err := u.Repo.DeleteAll(url, userid)
-			if err != nil {
+			deleteResCh <- err
+		}(url)
+	}
+
+	// Fan-In
+	go func(doneCh chan struct{}) {
+		defer close(resultCh)
+		for range urls {
+			select {
+			case <-doneCh:
+				return
+			case err := <-deleteResCh:
 				resultCh <- err
 			}
-
-		}(url, userid, resultCh)
-	}
-
-	go func() {
-		wg.Wait()
-		close(resultCh)
-	}()
+		}
+	}(doneCh)
 
 	for err := range resultCh {
-		fmt.Printf("error deleting url: %v", err)
+		fmt.Printf("failed to delete a url: %v", err)
 	}
-
 }
