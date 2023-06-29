@@ -21,13 +21,13 @@ type urlService struct {
 	config config.AppConfig
 }
 
-func (u *urlService) ShortenURLHandler(body string) (string, error) {
+func (u *urlService) ShortenURLHandler(body string, userID string) (string, error) {
 	shortPath, err := u.ShortenURL(body)
 	if err != nil {
 		return "", err
 	}
 
-	err = u.Repo.Create(shortPath, body)
+	err = u.Repo.Create(shortPath, body, userID)
 	if err != nil {
 		var urlConflictError *apperrors.URLConflict
 		if errors.As(err, &urlConflictError) {
@@ -69,7 +69,7 @@ func (u *urlService) ShortenURL(body string) (string, error) {
 func (u *urlService) ExpandURL(path string) (string, error) {
 	url, err := u.Repo.OriginalURL(path)
 	if err != nil {
-		return "", fmt.Errorf("URL path '%s' not found", path)
+		return "", fmt.Errorf("URL path '%s' not found: %w", path, err)
 	}
 	if url == "" {
 		return "", apperrors.ErrNotFound
@@ -77,7 +77,7 @@ func (u *urlService) ExpandURL(path string) (string, error) {
 	return url, nil
 }
 
-func (u *urlService) HandleBatchInsert(data io.ReadCloser) ([]models.BatchURLResponce, error) {
+func (u *urlService) HandleBatchInsert(data io.ReadCloser, userID string) ([]models.BatchURLResponce, error) {
 	var parsedReq []models.BatchURLRequest
 
 	decoder := json.NewDecoder(data)
@@ -95,19 +95,23 @@ func (u *urlService) HandleBatchInsert(data io.ReadCloser) ([]models.BatchURLRes
 			logger.Log.Infof("Failed to shorten URL")
 			continue
 		}
-		tempURLRequests = append(tempURLRequests, models.TempURLBatchRequest{CorrelationID: req.CorrelationID, ShortURL: shortURL, OriginalURL: req.OriginalURL})
+		tempURLRequests = append(tempURLRequests, models.TempURLBatchRequest{
+			CorrelationID: req.CorrelationID,
+			ShortURL:      shortURL,
+			OriginalURL:   req.OriginalURL,
+		})
 	}
 
 	switch {
 	case u.config.DataBase.ConnectionStr != "":
-		res, err := u.Repo.BatchCreate(tempURLRequests)
+		res, err := u.Repo.BatchCreate(tempURLRequests, userID)
 		if err != nil {
 			return []models.BatchURLResponce{}, err
 		}
 		return res, nil
 	default:
 		for _, req := range tempURLRequests {
-			err := u.Repo.Create(req.ShortURL, req.OriginalURL)
+			err := u.Repo.Create(req.ShortURL, req.OriginalURL, userID)
 			if err != nil {
 				return []models.BatchURLResponce{}, err
 			}
@@ -115,4 +119,23 @@ func (u *urlService) HandleBatchInsert(data io.ReadCloser) ([]models.BatchURLRes
 		}
 		return []models.BatchURLResponce{}, nil
 	}
+}
+
+func (u *urlService) GetAll(userid string) ([]models.URLJsonResponse, error) {
+	urls, err := u.Repo.GetAll(userid)
+	if err != nil {
+		return []models.URLJsonResponse{}, nil
+	}
+
+	return urls, nil
+}
+
+func (u *urlService) DeleteAll(urls []string, userid string) error {
+	logger.Log.Infof("URL Service. List of urls to delete: %v", urls)
+	err := u.Repo.DeleteAll(urls, userid)
+	if err != nil {
+		fmt.Printf("failed to async delete urls: %v", err)
+		return err
+	}
+	return nil
 }

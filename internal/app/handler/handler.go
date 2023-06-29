@@ -21,7 +21,11 @@ func NewHandler(services *service.ServiceContainer, cfg config.AppConfig) *Handl
 
 func (h Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
-	router.Use(middlewares.LogReqResInfo(), middlewares.DataCompressor())
+	router.Use(
+		middlewares.LogReqResInfo(),
+		middlewares.DataCompressor(),
+		middlewares.CookieHandler(h.Cfg.Server.SecretKey),
+	)
 
 	router.POST("/", h.ShortenURL)
 	router.GET("/:id", h.ExpandURL)
@@ -31,6 +35,8 @@ func (h Handler) InitRoutes() *gin.Engine {
 	{
 		api.POST("/shorten", h.ShortenURLjson)
 		api.POST("/shorten/batch", h.batchURLinsert)
+		api.GET("/user/urls", h.GetAll)
+		api.DELETE("/user/urls", h.deleteAll)
 	}
 
 	return router

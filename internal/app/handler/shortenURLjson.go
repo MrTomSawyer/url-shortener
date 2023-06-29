@@ -15,6 +15,11 @@ import (
 func (h *Handler) ShortenURLjson(c *gin.Context) {
 	var req models.ShortenRequest
 	body := c.Request.Body
+	userID, exists := c.Get("user_id")
+	if !exists {
+		fmt.Println("Failed to get user_id")
+	}
+	userIDStr, _ := userID.(string)
 
 	defer func(body io.ReadCloser) {
 		if err := body.Close(); err != nil {
@@ -32,7 +37,7 @@ func (h *Handler) ShortenURLjson(c *gin.Context) {
 		return
 	}
 
-	shortenURL, err := h.services.URL.ShortenURLHandler(req.URL)
+	shortenURL, err := h.services.URL.ShortenURLHandler(req.URL, userIDStr)
 	if err != nil {
 		var urlConflictError *apperrors.URLConflict
 		if errors.As(err, &urlConflictError) {

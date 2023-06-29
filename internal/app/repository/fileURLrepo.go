@@ -30,7 +30,7 @@ func NewFileURLrepo(path string) (*FileURLrepo, error) {
 	return &fileRepo, nil
 }
 
-func (s *FileURLrepo) Create(shortURL, originalURL string) error {
+func (s *FileURLrepo) Create(shortURL, originalURL, userID string) error {
 	logger.Log.Infof("Writing to file... ShortURL: %s, OriginalURL: %s", shortURL, originalURL)
 
 	uj := models.URLJson{
@@ -107,6 +107,19 @@ func (s FileURLrepo) OriginalURL(shortURL string) (string, error) {
 	return s.storage[shortURL], nil
 }
 
-func (s FileURLrepo) BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
+func (s FileURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
 	return []models.BatchURLResponce{}, nil
+}
+
+func (s FileURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
+	var response []models.URLJsonResponse
+
+	for key, value := range s.storage {
+		response = append(response, models.URLJsonResponse{ShortURL: key, OriginalURL: value})
+	}
+	return response, nil
+}
+
+func (s FileURLrepo) DeleteAll(shortURLs []string, userid string) error {
+	return nil
 }

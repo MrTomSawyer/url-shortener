@@ -10,9 +10,11 @@ import (
 )
 
 type RepoHandler interface {
-	Create(shortURL, originalURL string) error
+	Create(shortURL, originalURL, userID string) error
 	OriginalURL(shortURL string) (string, error)
-	BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error)
+	BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error)
+	GetAll(userid string) ([]models.URLJsonResponse, error)
+	DeleteAll(shortURLs []string, userid string) error
 }
 
 type RepositoryContainer struct {
@@ -38,7 +40,9 @@ func InitRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (Rep
 				id SERIAL PRIMARY KEY,
 				correlationid TEXT,
 				shorturl TEXT,
-				originalurl TEXT
+				userid TEXT,
+				originalurl TEXT,
+				isdeleted BOOLEAN DEFAULT false
 			);`
 
 		if _, err := db.ExecContext(ctx, createTableQuery); err != nil {
@@ -50,7 +54,10 @@ func InitRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (Rep
 			return nil, err
 		}
 
-		return NewPostgresURLrepo(ctx, db, cfg), nil
+		urlsCh := make(chan models.UserURLs)
+		pgRepo := NewPostgresURLrepo(ctx, db, cfg, urlsCh)
+		go WorkerDeleteURLs(urlsCh, db)
+		return pgRepo, nil
 
 	case cfg.Server.TempFolder != "":
 		logger.Log.Infof("Initializing file repository")

@@ -12,7 +12,7 @@ func NewInMemoryURLRepo() *InMemoryURLRepo {
 	}
 }
 
-func (i *InMemoryURLRepo) Create(shortURL, originalURL string) error {
+func (i *InMemoryURLRepo) Create(shortURL, originalURL, userID string) error {
 	i.storage[shortURL] = originalURL
 	return nil
 }
@@ -21,6 +21,19 @@ func (i *InMemoryURLRepo) OriginalURL(shortURL string) (string, error) {
 	return i.storage[shortURL], nil
 }
 
-func (i *InMemoryURLRepo) BatchCreate(data []models.TempURLBatchRequest) ([]models.BatchURLResponce, error) {
+func (i *InMemoryURLRepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
 	return []models.BatchURLResponce{}, nil
+}
+
+func (i *InMemoryURLRepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
+	var response []models.URLJsonResponse
+
+	for key, value := range i.storage {
+		response = append(response, models.URLJsonResponse{ShortURL: key, OriginalURL: value})
+	}
+	return response, nil
+}
+
+func (i *InMemoryURLRepo) DeleteAll(shortURLs []string, userid string) error {
+	return nil
 }

@@ -2,16 +2,13 @@ package handler
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
-	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"github.com/MrTomSawyer/url-shortener/internal/app/repository"
 	"github.com/MrTomSawyer/url-shortener/internal/app/repository/mocks"
 	"github.com/MrTomSawyer/url-shortener/internal/app/service"
@@ -21,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBatchURLinsert(t *testing.T) {
+func TestDeleteAll(t *testing.T) {
 	cfg := config.AppConfig{}
 	cfg.Server.DefaultAddr = "http://localhost:8080"
 	cfg.Server.ServerAddr = ":8080"
@@ -34,37 +31,25 @@ func TestBatchURLinsert(t *testing.T) {
 	}
 
 	type want struct {
-		code     int
-		response []models.BatchURLResponce
+		code int
 	}
 
 	tests := []struct {
-		name      string
-		url       string
-		body      []byte
-		method    string
-		shortPath string
-		want      want
+		name   string
+		url    string
+		body   []byte
+		method string
+		userID string
+		want   want
 	}{
 		{
-			name: "Test #1 - Batch insert",
-			url:  "localhost:8080/api/shorten/batch",
-			body: []byte(`[
-				{
-					"correlation_id": "1",
-					"original_url":   "https://ya.ru"
-				}
-			]`),
-			shortPath: "e98192e1",
-			method:    "POST",
+			name:   "Test #1 - Batch delete",
+			url:    "localhost:8080/api/user/urls",
+			body:   []byte(`["e98192e1"]`),
+			method: "DELETE",
+			userID: "user",
 			want: want{
-				code: 201,
-				response: []models.BatchURLResponce{
-					{
-						CorrelationID: "1",
-						ShortURL:      "http://localhost:8080/e98192e1",
-					},
-				},
+				code: 202,
 			},
 		},
 	}
@@ -75,14 +60,14 @@ func TestBatchURLinsert(t *testing.T) {
 
 		m := mocks.NewMockRepoHandler(ctrl)
 
-		m.EXPECT().OriginalURL(test.shortPath).Return("", nil)
-		m.EXPECT().BatchCreate(gomock.Any(), gomock.Any()).Return(test.want.response, nil)
+		m.EXPECT().DeleteAll(gomock.Any(), test.userID).Return(nil)
 
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 
 		body := bytes.NewBuffer(test.body)
 		c.Request, _ = http.NewRequest(test.method, test.url, body)
+		c.Set("user_id", test.userID)
 
 		var db *sqlx.DB
 		repo, err := repository.NewRepositoryContainer(db, m)
@@ -98,11 +83,8 @@ func TestBatchURLinsert(t *testing.T) {
 		h := Handler{
 			services: serviceContainer,
 		}
-		h.batchURLinsert(c)
+		h.deleteAll(c)
 
 		assert.Equal(t, test.want.code, c.Writer.Status())
-
-		wantBody, _ := json.Marshal(test.want.response)
-		assert.JSONEq(t, string(wantBody), strings.TrimSpace(w.Body.String()), "unexpected response body")
 	}
 }

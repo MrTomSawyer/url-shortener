@@ -29,3 +29,13 @@ type TempURLBatchRequest struct {
 	ShortURL      string `json:"short_url"`
 	OriginalURL   string `json:"original_url"`
 }
+
+type URLJsonResponse struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}
+
+type UserURLs struct {
+	UserID string
+	URLs   []string
+}
