@@ -132,33 +132,8 @@ func (u *urlService) GetAll(userid string) ([]models.URLJsonResponse, error) {
 
 func (u *urlService) DeleteAll(urls []string, userid string) {
 	logger.Log.Infof("URL Service. List of urls to delete: %v", urls)
-
-	doneCh := make(chan struct{})
-	resultCh := make(chan error)
-	deleteResCh := make(chan error, len(urls))
-
-	// Fan-Out
-	for _, url := range urls {
-		go func(url string) {
-			err := u.Repo.DeleteAll(url, userid)
-			deleteResCh <- err
-		}(url)
-	}
-
-	// Fan-In
-	go func(doneCh chan struct{}) {
-		defer close(resultCh)
-		for range urls {
-			select {
-			case <-doneCh:
-				return
-			case err := <-deleteResCh:
-				resultCh <- err
-			}
-		}
-	}(doneCh)
-
-	for err := range resultCh {
-		fmt.Printf("failed to delete a url: %v", err)
+	err := u.Repo.DeleteAsync(urls, userid)
+	if err != nil {
+		fmt.Printf("failed to async delete urls: %v", err)
 	}
 }

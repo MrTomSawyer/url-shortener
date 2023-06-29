@@ -120,6 +120,10 @@ func (s FileURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	return response, nil
 }
 
-func (s FileURLrepo) DeleteAll(shortURL string, userid string) error {
+func (s FileURLrepo) DeleteAll(shortURLs []string, userid string) error {
+	return nil
+}
+
+func (s FileURLrepo) DeleteAsync(ids []string, userID string) error {
 	return nil
 }

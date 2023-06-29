@@ -14,7 +14,8 @@ type RepoHandler interface {
 	OriginalURL(shortURL string) (string, error)
 	BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error)
 	GetAll(userid string) ([]models.URLJsonResponse, error)
-	DeleteAll(shortURL string, userid string) error
+	DeleteAll(shortURLs []string, userid string) error
+	DeleteAsync(ids []string, userID string) error
 }
 
 type RepositoryContainer struct {
@@ -54,7 +55,10 @@ func InitRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (Rep
 			return nil, err
 		}
 
-		return NewPostgresURLrepo(ctx, db, cfg), nil
+		urlsCh := make(chan models.UserURLs)
+		pgRepo := NewPostgresURLrepo(ctx, db, cfg, urlsCh)
+		go pgRepo.WorkerDeleteURLs(ctx)
+		return pgRepo, nil
 
 	case cfg.Server.TempFolder != "":
 		logger.Log.Infof("Initializing file repository")

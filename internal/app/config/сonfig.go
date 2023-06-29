@@ -23,10 +23,10 @@ func (a *AppConfig) InitAppConfig() error {
 	flag.StringVar(&a.Server.DefaultAddr, "b", "http://localhost:8080", "default address and port of a shortened URL")
 	flag.StringVar(&a.Server.TempFolder, "f", "/tmp/short-url-db.json", "default temp data storage path and filename")
 	flag.StringVar(&a.Server.SecretKey, "sk", "secret", "secret signing key")
-	flag.StringVar(&a.DataBase.ConnectionStr, "d", "", "Database connection string")
+	// flag.StringVar(&a.DataBase.ConnectionStr, "d", "", "Database connection string")
 
 	//для локальных тестов
-	// flag.StringVar(&a.DataBase.ConnectionStr, "d", "host=localhost port=5432 user=myuser password=password dbname=mydb sslmode=disable", "Database connection string")
+	flag.StringVar(&a.DataBase.ConnectionStr, "d", "host=localhost port=5432 user=myuser password=password dbname=mydb sslmode=disable", "Database connection string")
 	flag.Parse()
 
 	err := env.Parse(a)

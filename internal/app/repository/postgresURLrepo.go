@@ -15,18 +15,20 @@ import (
 )
 
 type PostgresURLrepo struct {
-	Table    string
-	Postgres *sqlx.DB
-	ctx      context.Context
-	cfg      config.AppConfig
+	Table            string
+	Postgres         *sqlx.DB
+	ctx              context.Context
+	cfg              config.AppConfig
+	urlsToDeleteChan chan models.UserURLs
 }
 
-func NewPostgresURLrepo(ctx context.Context, db *sqlx.DB, cfg config.AppConfig) *PostgresURLrepo {
+func NewPostgresURLrepo(ctx context.Context, db *sqlx.DB, cfg config.AppConfig, urlsToDeleteChan chan models.UserURLs) *PostgresURLrepo {
 	return &PostgresURLrepo{
-		Table:    "urls",
-		Postgres: db,
-		ctx:      ctx,
-		cfg:      cfg,
+		Table:            "urls",
+		Postgres:         db,
+		ctx:              ctx,
+		cfg:              cfg,
+		urlsToDeleteChan: urlsToDeleteChan,
 	}
 }
 
@@ -134,23 +136,49 @@ func (u PostgresURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error)
 	return responce, nil
 }
 
-func (u PostgresURLrepo) DeleteAll(shortURL string, userid string) error {
+func (u PostgresURLrepo) DeleteAsync(ids []string, userID string) error {
+	u.urlsToDeleteChan <- models.UserURLs{UserID: userID, URLs: ids}
+	return nil
+}
+
+func (u PostgresURLrepo) WorkerDeleteURLs(ctx context.Context) {
+	select {
+	case res := <-u.urlsToDeleteChan:
+		err := u.DeleteAll(res.URLs, res.UserID)
+		if err != nil {
+			fmt.Printf("failed to delete url: %v", err)
+		}
+	case <-ctx.Done():
+		return
+	}
+}
+
+func (u PostgresURLrepo) DeleteAll(shortURLs []string, userid string) error {
 	ctx, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
 	defer cancel()
 
-	logger.Log.Infof("Deleting url of %s, userId id %s", shortURL, userid)
-
-	query := fmt.Sprintf("UPDATE %s SET isdeleted=true WHERE (shorturl=$1 AND userid=$2)", u.Table)
-	row := u.Postgres.QueryRowContext(ctx, query, shortURL, userid)
-	var res string
-
-	err := row.Scan(&res)
-	logger.Log.Infof("Deleting result: %s", res)
+	tx, err := u.Postgres.Begin()
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil
-		}
+		logger.Log.Infof("Failed to start transaction")
 		return err
+	}
+
+	for _, URL := range shortURLs {
+		logger.Log.Infof("Deleting url of %s, userId id %s", URL, userid)
+		query := fmt.Sprintf("UPDATE %s SET isdeleted=true WHERE (shorturl=$1 AND userid=$2)", u.Table)
+		row := u.Postgres.QueryRowContext(ctx, query, URL, userid)
+
+		var res string
+		err := row.Scan(&res)
+		logger.Log.Infof("Deleting result: %s", res)
+		if err != nil {
+			fmt.Printf("failed to delete url %s : %v", URL, err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Infof("Failed to commit a transaction")
 	}
 	return nil
 }

@@ -34,6 +34,10 @@ func (i *InMemoryURLRepo) GetAll(userid string) ([]models.URLJsonResponse, error
 	return response, nil
 }
 
-func (i *InMemoryURLRepo) DeleteAll(shortURL string, userid string) error {
+func (i *InMemoryURLRepo) DeleteAll(shortURLs []string, userid string) error {
+	return nil
+}
+
+func (i *InMemoryURLRepo) DeleteAsync(ids []string, userID string) error {
 	return nil
 }
