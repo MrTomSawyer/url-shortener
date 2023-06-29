@@ -77,20 +77,6 @@ func (mr *MockRepoHandlerMockRecorder) DeleteAll(shortURLs, userid interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAll", reflect.TypeOf((*MockRepoHandler)(nil).DeleteAll), shortURLs, userid)
 }
 
-// DeleteAsync mocks base method.
-func (m *MockRepoHandler) DeleteAsync(ids []string, userID string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAsync", ids, userID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteAsync indicates an expected call of DeleteAsync.
-func (mr *MockRepoHandlerMockRecorder) DeleteAsync(ids, userID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAsync", reflect.TypeOf((*MockRepoHandler)(nil).DeleteAsync), ids, userID)
-}
-
 // GetAll mocks base method.
 func (m *MockRepoHandler) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	m.ctrl.T.Helper()

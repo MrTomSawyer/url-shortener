@@ -136,18 +136,12 @@ func (u PostgresURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error)
 	return responce, nil
 }
 
-func (u PostgresURLrepo) DeleteAsync(ids []string, userID string) error {
-	u.urlsToDeleteChan <- models.UserURLs{UserID: userID, URLs: ids}
-	return nil
-}
-
 func WorkerDeleteURLs(deleteChan chan models.UserURLs, db *sqlx.DB) {
 	for userURL := range deleteChan {
 		logger.Log.Infof("Deleting url of %s, userId id %s", userURL.URLs, userURL.UserID)
-		//Оптимизировать
+		// TODO Оптимизировать, убрать вложенный цикл
 		for _, url := range userURL.URLs {
-			query := fmt.Sprintf("UPDATE urls SET isdeleted=true WHERE (shorturl = $1 AND userid=$2)")
-			_, err := db.Exec(query, url, userURL.UserID)
+			_, err := db.Exec("UPDATE urls SET isdeleted=true WHERE (shorturl = $1 AND userid=$2)", url, userURL.UserID)
 			if err != nil {
 				logger.Log.Infof("error while deleting: %e", err)
 			}
@@ -155,33 +149,7 @@ func WorkerDeleteURLs(deleteChan chan models.UserURLs, db *sqlx.DB) {
 	}
 }
 
-// выпилить
 func (u PostgresURLrepo) DeleteAll(shortURLs []string, userid string) error {
-	ctx, cancel := context.WithTimeout(u.ctx, 20000000000*time.Millisecond)
-	defer cancel()
-
-	tx, err := u.Postgres.Begin()
-	if err != nil {
-		logger.Log.Infof("Failed to start transaction")
-		return err
-	}
-
-	for _, URL := range shortURLs {
-		logger.Log.Infof("Deleting url of %s, userId id %s", URL, userid)
-		query := fmt.Sprintf("UPDATE %s SET isdeleted=true WHERE (shorturl=$1 AND userid=$2)", u.Table)
-		row := u.Postgres.QueryRowContext(ctx, query, URL, userid)
-
-		var res string
-		err := row.Scan(&res)
-		logger.Log.Infof("Deleting result: %s", res)
-		if err != nil {
-			fmt.Printf("failed to delete url %s : %v", URL, err)
-		}
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		logger.Log.Infof("Failed to commit a transaction")
-	}
+	u.urlsToDeleteChan <- models.UserURLs{UserID: userid, URLs: shortURLs}
 	return nil
 }

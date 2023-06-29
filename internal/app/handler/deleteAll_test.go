@@ -60,7 +60,7 @@ func TestDeleteAll(t *testing.T) {
 
 		m := mocks.NewMockRepoHandler(ctrl)
 
-		m.EXPECT().DeleteAsync(gomock.Any(), test.userID).Return(nil)
+		m.EXPECT().DeleteAll(gomock.Any(), test.userID).Return(nil)
 
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)

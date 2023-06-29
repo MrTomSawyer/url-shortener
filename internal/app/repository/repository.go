@@ -15,7 +15,6 @@ type RepoHandler interface {
 	BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error)
 	GetAll(userid string) ([]models.URLJsonResponse, error)
 	DeleteAll(shortURLs []string, userid string) error
-	DeleteAsync(ids []string, userID string) error
 }
 
 type RepositoryContainer struct {
