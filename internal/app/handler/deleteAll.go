@@ -39,7 +39,10 @@ func (h Handler) deleteAll(c *gin.Context) {
 		return
 	}
 
-	h.services.URL.DeleteAll(data, userIDStr)
+	err = h.services.URL.DeleteAll(data, userIDStr)
+	if err != nil {
+		fmt.Printf("failed to delete url: %v", err)
+	}
 
 	c.Writer.WriteHeader(http.StatusAccepted)
 }
