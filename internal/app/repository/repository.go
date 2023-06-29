@@ -57,7 +57,7 @@ func InitRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (Rep
 
 		urlsCh := make(chan models.UserURLs)
 		pgRepo := NewPostgresURLrepo(ctx, db, cfg, urlsCh)
-		go pgRepo.WorkerDeleteURLs(ctx)
+		go WorkerDeleteURLs(urlsCh, db)
 		return pgRepo, nil
 
 	case cfg.Server.TempFolder != "":
