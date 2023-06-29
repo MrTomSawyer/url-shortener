@@ -166,14 +166,7 @@ func (u PostgresURLrepo) DeleteAll(shortURLs []string, userid string) error {
 	for _, URL := range shortURLs {
 		logger.Log.Infof("Deleting url of %s, userId id %s", URL, userid)
 		query := fmt.Sprintf("UPDATE %s SET isdeleted=true WHERE (shorturl=$1 AND userid=$2)", u.Table)
-		row := u.Postgres.QueryRowContext(ctx, query, URL, userid)
-
-		var res string
-		err := row.Scan(&res)
-		logger.Log.Infof("Deleting result: %s", res)
-		if err != nil {
-			fmt.Printf("failed to delete url %s : %v", URL, err)
-		}
+		u.Postgres.QueryRowContext(ctx, query, URL, userid)
 	}
 
 	err = tx.Commit()
