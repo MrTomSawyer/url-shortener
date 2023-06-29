@@ -154,10 +154,9 @@ func (u PostgresURLrepo) WorkerDeleteURLs(ctx context.Context) {
 }
 
 func (u PostgresURLrepo) DeleteAll(shortURLs []string, userid string) error {
-	ctx, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
-	defer cancel()
-
+	logger.Log.Infof("DeleteAll start")
 	tx, err := u.Postgres.Begin()
+	logger.Log.Infof("Transaction start")
 	if err != nil {
 		logger.Log.Infof("Failed to start transaction")
 		return err
@@ -166,10 +165,11 @@ func (u PostgresURLrepo) DeleteAll(shortURLs []string, userid string) error {
 	for _, URL := range shortURLs {
 		logger.Log.Infof("Deleting url of %s, userId id %s", URL, userid)
 		query := fmt.Sprintf("UPDATE %s SET isdeleted=true WHERE (shorturl=$1 AND userid=$2)", u.Table)
-		u.Postgres.QueryRowContext(ctx, query, URL, userid)
+		u.Postgres.QueryRowContext(u.ctx, query, URL, userid)
 	}
 
 	err = tx.Commit()
+	logger.Log.Infof("Transaction end")
 	if err != nil {
 		logger.Log.Infof("Failed to commit a transaction")
 	}
