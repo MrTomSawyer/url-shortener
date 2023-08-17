@@ -55,6 +55,8 @@ func TestDeleteAll(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		gin.SetMode(gin.ReleaseMode)
+
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 

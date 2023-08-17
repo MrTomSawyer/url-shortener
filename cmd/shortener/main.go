@@ -49,10 +49,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	handler := handler.NewHandler(services, appConfig)
-	server := new(server.Server)
+	h := handler.NewHandler(services, appConfig)
+	s := new(server.Server)
 
-	if err := server.Run(appConfig.Server.ServerAddr, handler.InitRoutes()); err != nil {
+	if err := s.Run(appConfig.Server.ServerAddr, h.InitRoutes()); err != nil {
 		panic(err)
 	}
 }

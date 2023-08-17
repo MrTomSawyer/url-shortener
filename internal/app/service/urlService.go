@@ -131,7 +131,6 @@ func (u *urlService) GetAll(userid string) ([]models.URLJsonResponse, error) {
 }
 
 func (u *urlService) DeleteAll(urls []string, userid string) error {
-	logger.Log.Infof("URL Service. List of urls to delete: %v", urls)
 	err := u.Repo.DeleteAll(urls, userid)
 	if err != nil {
 		fmt.Printf("failed to async delete urls: %v", err)

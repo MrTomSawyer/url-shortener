@@ -4,6 +4,7 @@ import (
 	"github.com/MrTomSawyer/url-shortener/internal/app/config"
 	"github.com/MrTomSawyer/url-shortener/internal/app/middlewares"
 	"github.com/MrTomSawyer/url-shortener/internal/app/service"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,6 +22,8 @@ func NewHandler(services *service.ServiceContainer, cfg config.AppConfig) *Handl
 
 func (h Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
+	pprof.Register(router)
+
 	router.Use(
 		middlewares.LogReqResInfo(),
 		middlewares.DataCompressor(),

@@ -103,15 +103,15 @@ func (s *FileURLrepo) Read() error {
 	return nil
 }
 
-func (s FileURLrepo) OriginalURL(shortURL string) (string, error) {
+func (s *FileURLrepo) OriginalURL(shortURL string) (string, error) {
 	return s.storage[shortURL], nil
 }
 
-func (s FileURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
+func (s *FileURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
 	return []models.BatchURLResponce{}, nil
 }
 
-func (s FileURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
+func (s *FileURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	var response []models.URLJsonResponse
 
 	for key, value := range s.storage {
@@ -120,6 +120,6 @@ func (s FileURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	return response, nil
 }
 
-func (s FileURLrepo) DeleteAll(shortURLs []string, userid string) error {
+func (s *FileURLrepo) DeleteAll(shortURLs []string, userid string) error {
 	return nil
 }
