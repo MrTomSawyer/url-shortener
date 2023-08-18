@@ -1,3 +1,4 @@
+// Package repository provides implementations for data storage and retrieval.
 package repository
 
 import (
@@ -14,6 +15,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// PostgresURLrepo represents a repository for interacting with PostgreSQL database.
 type PostgresURLrepo struct {
 	Table            string
 	Postgres         *sqlx.DB
@@ -22,6 +24,7 @@ type PostgresURLrepo struct {
 	urlsToDeleteChan chan models.UserURLs
 }
 
+// NewPostgresURLrepo creates a new instance of PostgresURLrepo.
 func NewPostgresURLrepo(ctx context.Context, db *sqlx.DB, cfg config.AppConfig, urlsToDeleteChan chan models.UserURLs) *PostgresURLrepo {
 	return &PostgresURLrepo{
 		Table:            "urls",
@@ -32,6 +35,7 @@ func NewPostgresURLrepo(ctx context.Context, db *sqlx.DB, cfg config.AppConfig, 
 	}
 }
 
+// Create inserts a new URL entry into the database.
 func (u PostgresURLrepo) Create(shortURL, originalURL, userID string) error {
 	cxt, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
 	defer cancel()
@@ -55,6 +59,7 @@ func (u PostgresURLrepo) Create(shortURL, originalURL, userID string) error {
 	return nil
 }
 
+// OriginalURL retrieves the original URL associated with a given short URL.
 func (u PostgresURLrepo) OriginalURL(shortURL string) (string, error) {
 	cxt, cancel := context.WithTimeout(u.ctx, 2000000*time.Millisecond)
 	defer cancel()
@@ -73,14 +78,15 @@ func (u PostgresURLrepo) OriginalURL(shortURL string) (string, error) {
 	return originalURL, nil
 }
 
-func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
+// BatchCreate inserts multiple URLs into the database in a batch.
+func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponse, error) {
 	tx, err := u.Postgres.Begin()
 	if err != nil {
 		logger.Log.Infof("Failed to start transaction")
-		return []models.BatchURLResponce{}, err
+		return []models.BatchURLResponse{}, err
 	}
 
-	var response []models.BatchURLResponce
+	var response []models.BatchURLResponse
 
 	for _, req := range data {
 		query := "INSERT INTO urls (correlationid, shorturl, originalurl, userid) VALUES ($1, $2, $3, $4)"
@@ -92,7 +98,7 @@ func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID s
 			continue
 		}
 
-		response = append(response, models.BatchURLResponce{
+		response = append(response, models.BatchURLResponse{
 			CorrelationID: req.CorrelationID,
 			ShortURL:      fmt.Sprintf("%s/%s", u.cfg.Server.DefaultAddr, req.ShortURL),
 		})
@@ -100,11 +106,12 @@ func (u PostgresURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID s
 	err = tx.Commit()
 	if err != nil {
 		logger.Log.Infof("Failed to commit a transaction")
-		return []models.BatchURLResponce{}, err
+		return []models.BatchURLResponse{}, err
 	}
 	return response, nil
 }
 
+// GetAll retrieves all URLs associated with a given user ID.
 func (u PostgresURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	ctx, cancel := context.WithTimeout(u.ctx, 2000*time.Millisecond)
 	defer cancel()
@@ -136,10 +143,11 @@ func (u PostgresURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error)
 	return responce, nil
 }
 
+// WorkerDeleteURLs deletes URLs received from a channel.
 func WorkerDeleteURLs(deleteChan chan models.UserURLs, db *sqlx.DB) {
 	for userURL := range deleteChan {
 		logger.Log.Infof("Deleting url of %s, userId id %s", userURL.URLs, userURL.UserID)
-		// TODO Оптимизировать, убрать вложенный цикл
+		// TODO: Optimize and remove nested loop
 		for _, url := range userURL.URLs {
 			_, err := db.Exec("UPDATE urls SET isdeleted=true WHERE (shorturl = $1 AND userid=$2)", url, userURL.UserID)
 			if err != nil {
@@ -149,6 +157,7 @@ func WorkerDeleteURLs(deleteChan chan models.UserURLs, db *sqlx.DB) {
 	}
 }
 
+// DeleteAll enqueues URL deletion requests to the worker.
 func (u PostgresURLrepo) DeleteAll(shortURLs []string, userid string) error {
 	u.urlsToDeleteChan <- models.UserURLs{UserID: userid, URLs: shortURLs}
 	return nil

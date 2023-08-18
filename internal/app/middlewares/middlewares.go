@@ -1,3 +1,4 @@
+// Package middlewares provides middleware functions for handling various aspects of HTTP requests and responses.
 package middlewares
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// LogReqResInfo is a middleware that logs information about incoming requests and outgoing responses.
 func LogReqResInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startTime := time.Now()
@@ -20,6 +22,7 @@ func LogReqResInfo() gin.HandlerFunc {
 	}
 }
 
+// DataCompressor is a middleware that handles request and response data compression.
 func DataCompressor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		encoding := c.Request.Header.Get("Content-Encoding")

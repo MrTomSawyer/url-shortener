@@ -1,3 +1,4 @@
+// Package handler provides HTTP request handlers for managing URL-related operations.
 package handler
 
 import (
@@ -7,10 +8,10 @@ import (
 	"net/http"
 
 	"github.com/MrTomSawyer/url-shortener/internal/app/apperrors"
-
 	"github.com/gin-gonic/gin"
 )
 
+// ShortenURL handles the HTTP POST request to shorten a URL.
 func (h *Handler) ShortenURL(c *gin.Context) {
 	body := c.Request.Body
 	userID, exists := c.Get("user_id")
@@ -43,7 +44,7 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 			c.String(http.StatusConflict, shortURL)
 			return
 		}
-		fmt.Printf("Failed to shorten a url: %v\n", err)
+		fmt.Printf("Failed to shorten a URL: %v\n", err)
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 	}
 

@@ -1,3 +1,4 @@
+// Package handler provides HTTP request handlers for managing URL-related operations.
 package handler
 
 import (
@@ -9,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// batchURLinsert handles the HTTP POST request to insert URLs in batch.
 func (h Handler) batchURLinsert(c *gin.Context) {
 	body := c.Request.Body
 	userID, exists := c.Get("user_id")
@@ -17,7 +19,7 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 	}
 	userIDStr, _ := userID.(string)
 
-	logger.Log.Infof("batchURLinsert user id: %s", userID)
+	logger.Log.Infof("batchURLinsert user ID: %s", userIDStr)
 
 	defer func(body io.ReadCloser) {
 		if err := body.Close(); err != nil {
@@ -30,6 +32,6 @@ func (h Handler) batchURLinsert(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 	}
 
-	logger.Log.Infof("batchURLinsert response: ", res)
+	logger.Log.Infof("batchURLinsert response: %v", res)
 	c.JSON(http.StatusCreated, res)
 }

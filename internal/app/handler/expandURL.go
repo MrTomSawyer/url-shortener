@@ -1,3 +1,4 @@
+// Package handler provides HTTP request handlers for managing URL-related operations.
 package handler
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ExpandURL handles the HTTP GET request to expand a shortened URL.
 func (h *Handler) ExpandURL(c *gin.Context) {
 	id := c.Param("id")
 
