@@ -44,7 +44,7 @@ func (h *Handler) ShortenURLjson(c *gin.Context) {
 	if err != nil {
 		var urlConflictError *apperrors.URLConflict
 		if errors.As(err, &urlConflictError) {
-			res := models.ShortenResponce{
+			res := models.ShortenResponse{
 				Result: shortenURL,
 			}
 			c.JSON(http.StatusConflict, res)
@@ -54,7 +54,7 @@ func (h *Handler) ShortenURLjson(c *gin.Context) {
 		return
 	}
 
-	res := models.ShortenResponce{
+	res := models.ShortenResponse{
 		Result: shortenURL,
 	}
 
