@@ -1,3 +1,4 @@
+// Package repository provides implementations for data storage and retrieval.
 package repository
 
 import (
@@ -9,27 +10,30 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// RepoHandler defines the interface for URL repository operations.
 type RepoHandler interface {
 	Create(shortURL, originalURL, userID string) error
 	OriginalURL(shortURL string) (string, error)
-	BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error)
-	GetAll(userid string) ([]models.URLJsonResponse, error)
-	DeleteAll(shortURLs []string, userid string) error
+	BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponse, error)
+	GetAll(userID string) ([]models.URLJsonResponse, error)
+	DeleteAll(shortURLs []string, userID string) error
 }
 
+// RepositoryContainer holds the database connection and the URL repository implementation.
 type RepositoryContainer struct {
 	Postgres *sqlx.DB
-	URLrepo  RepoHandler
+	URLRepo  RepoHandler
 }
 
+// NewRepositoryContainer creates a new RepositoryContainer instance.
 func NewRepositoryContainer(db *sqlx.DB, urlRepo RepoHandler) (*RepositoryContainer, error) {
-
 	return &RepositoryContainer{
 		Postgres: db,
-		URLrepo:  urlRepo,
+		URLRepo:  urlRepo,
 	}, nil
 }
 
+// InitRepository initializes the appropriate repository based on the configuration.
 func InitRepository(ctx context.Context, cfg config.AppConfig, db *sqlx.DB) (RepoHandler, error) {
 	switch {
 	case cfg.DataBase.ConnectionStr != "":

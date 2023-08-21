@@ -15,12 +15,14 @@ import (
 )
 
 func main() {
+	// Initialize application configuration.
 	appConfig := config.AppConfig{}
 	err := appConfig.InitAppConfig()
 	if err != nil {
 		panic(err)
 	}
 
+	// Initialize logger.
 	err = logger.InitLogger()
 	if err != nil {
 		panic(err)
@@ -28,6 +30,7 @@ func main() {
 
 	var db *sqlx.DB
 	if appConfig.DataBase.ConnectionStr != "" {
+		// Create and set up a database connection.
 		db, err = repository.NewPostgresDB(appConfig.DataBase.ConnectionStr)
 		if err != nil {
 			panic(err)
@@ -35,24 +38,32 @@ func main() {
 		defer db.Close()
 	}
 
+	// Initialize URL repository.
 	urlRepo, err := repository.InitRepository(context.Background(), appConfig, db)
 	if err != nil {
 		panic(err)
 	}
 
+	// Create and set up the repository container.
 	repo, err := repository.NewRepositoryContainer(db, urlRepo)
 	if err != nil {
 		panic(err)
 	}
 
+	// Create and set up service container.
 	services, err := service.NewServiceContainer(repo, appConfig)
 	if err != nil {
 		panic(err)
 	}
-	handler := handler.NewHandler(services, appConfig)
-	server := new(server.Server)
 
-	if err := server.Run(appConfig.Server.ServerAddr, handler.InitRoutes()); err != nil {
+	// Create and set up request handlers.
+	h := handler.NewHandler(services, appConfig)
+
+	// Create a new HTTP server instance.
+	s := new(server.Server)
+
+	// Start the HTTP server with configured routes.
+	if err := s.Run(appConfig.Server.ServerAddr, h.InitRoutes()); err != nil {
 		panic(err)
 	}
 }

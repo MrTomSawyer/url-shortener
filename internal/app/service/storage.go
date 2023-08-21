@@ -1,3 +1,4 @@
+// Package service provides functionalities for managing URL storage operations.
 package service
 
 import (
@@ -11,17 +12,20 @@ import (
 	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 )
 
+// Storage represents a storage mechanism for managing URL data.
 type Storage struct {
 	path        string
 	largestUUID int
 }
 
+// NewStorage creates a new Storage instance with the provided file path.
 func NewStorage(path string) (*Storage, error) {
 	return &Storage{
 		path: path,
 	}, nil
 }
 
+// Write appends a URLJson object to the storage file.
 func (s *Storage) Write(uj *models.URLJson) error {
 	file, err := os.OpenFile(s.path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
@@ -50,6 +54,7 @@ func (s *Storage) Write(uj *models.URLJson) error {
 	return nil
 }
 
+// Read reads URL data from the storage file and populates the provided repository map.
 func (s *Storage) Read(repo *map[string]string) error {
 	file, err := os.OpenFile(s.path, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {

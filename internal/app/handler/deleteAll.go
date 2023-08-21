@@ -1,3 +1,4 @@
+// Package handler provides HTTP request handlers for managing URL-related operations.
 package handler
 
 import (
@@ -9,13 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// deleteAll handles the HTTP DELETE request to delete multiple URLs.
 func (h Handler) deleteAll(c *gin.Context) {
 	body := c.Request.Body
 
 	defer func(body io.ReadCloser) {
 		err := body.Close()
 		if err != nil {
-			fmt.Printf("error closing bosy %v", err)
+			fmt.Printf("Error closing body: %v", err)
 		}
 	}(body)
 
@@ -41,7 +43,7 @@ func (h Handler) deleteAll(c *gin.Context) {
 
 	err = h.services.URL.DeleteAll(data, userIDStr)
 	if err != nil {
-		fmt.Printf("failed to delete url: %v", err)
+		fmt.Printf("Failed to delete URL: %v", err)
 	}
 
 	c.Writer.WriteHeader(http.StatusAccepted)

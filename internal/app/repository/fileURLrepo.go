@@ -1,23 +1,25 @@
+// Package repository provides implementations for data storage and retrieval.
 package repository
 
 import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
+	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 	"net/url"
 	"os"
 	"path"
-
-	"github.com/MrTomSawyer/url-shortener/internal/app/logger"
-	"github.com/MrTomSawyer/url-shortener/internal/app/models"
 )
 
+// FileURLrepo is a repository that stores URL data in a file.
 type FileURLrepo struct {
 	storage     map[string]string
 	path        string
 	largestUUID int
 }
 
+// NewFileURLrepo creates a new instance of FileURLrepo.
 func NewFileURLrepo(path string) (*FileURLrepo, error) {
 	fileRepo := FileURLrepo{
 		storage: map[string]string{},
@@ -30,6 +32,7 @@ func NewFileURLrepo(path string) (*FileURLrepo, error) {
 	return &fileRepo, nil
 }
 
+// Create adds a new URL entry to the repository.
 func (s *FileURLrepo) Create(shortURL, originalURL, userID string) error {
 	logger.Log.Infof("Writing to file... ShortURL: %s, OriginalURL: %s", shortURL, originalURL)
 
@@ -68,6 +71,7 @@ func (s *FileURLrepo) Create(shortURL, originalURL, userID string) error {
 	return nil
 }
 
+// Read reads data from the file and populates the repository.
 func (s *FileURLrepo) Read() error {
 	logger.Log.Infof("Starting to read file...")
 	file, err := os.OpenFile(s.path, os.O_RDONLY|os.O_CREATE, 0777)
@@ -103,15 +107,18 @@ func (s *FileURLrepo) Read() error {
 	return nil
 }
 
-func (s FileURLrepo) OriginalURL(shortURL string) (string, error) {
+// OriginalURL retrieves the original URL corresponding to a short URL.
+func (s *FileURLrepo) OriginalURL(shortURL string) (string, error) {
 	return s.storage[shortURL], nil
 }
 
-func (s FileURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
-	return []models.BatchURLResponce{}, nil
+// BatchCreate is not implemented for FileURLrepo.
+func (s *FileURLrepo) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponse, error) {
+	return []models.BatchURLResponse{}, nil
 }
 
-func (s FileURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
+// GetAll retrieves all URLs for a given user.
+func (s *FileURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	var response []models.URLJsonResponse
 
 	for key, value := range s.storage {
@@ -120,6 +127,7 @@ func (s FileURLrepo) GetAll(userid string) ([]models.URLJsonResponse, error) {
 	return response, nil
 }
 
-func (s FileURLrepo) DeleteAll(shortURLs []string, userid string) error {
+// DeleteAll is not implemented for FileURLrepo.
+func (s *FileURLrepo) DeleteAll(shortURLs []string, userid string) error {
 	return nil
 }

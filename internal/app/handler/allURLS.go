@@ -1,3 +1,4 @@
+// Package handler provides HTTP request handlers for managing URL-related operations.
 package handler
 
 import (
@@ -7,19 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetAll handles the HTTP GET request to retrieve all URLs associated with a user.
 func (h Handler) GetAll(c *gin.Context) {
-	userid, exists := c.Get("user_id")
+	userID, exists := c.Get("user_id")
 	if !exists {
-		logger.Log.Infof("GetAll: no userid found")
+		logger.Log.Infof("GetAll: no user ID found")
 	}
-	useridStr, ok := userid.(string)
+	userIDStr, ok := userID.(string)
 	if !ok {
-		logger.Log.Infof("FAiled to convert userid to string")
+		logger.Log.Infof("Failed to convert user ID to string")
 	}
 
-	logger.Log.Infof("GetAll user id: %s", useridStr)
+	logger.Log.Infof("GetAll user ID: %s", userIDStr)
 
-	response, err := h.services.URL.GetAll(useridStr)
+	response, err := h.services.URL.GetAll(userIDStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return

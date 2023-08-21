@@ -1,3 +1,4 @@
+// Package middlewares provides middleware functions for handling user authentication and cookies.
 package middlewares
 
 import (
@@ -14,6 +15,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// CookieHandler is a middleware that manages user authentication using cookies.
 func CookieHandler(secret string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		h := hmac.New(sha256.New, []byte(secret))
@@ -21,7 +23,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 
 		cookie, err := ctx.Cookie("user_id")
 		if err != nil {
-			logger.Log.Info("No cookie found. Crearing a new one...")
+			logger.Log.Info("No cookie found. Creating a new one...")
 			c, userID := createUUIDCookie(h)
 			ctx.SetCookie("user_id", c, int(maxAge.Unix()), "/", "", false, true)
 			ctx.Set("user_id", userID)
@@ -30,7 +32,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 		}
 
 		values := strings.Split(cookie, "|")
-		logger.Log.Info("Cookie userid and signature: %v", values)
+		logger.Log.Infof("Cookie user ID and signature: %v", values)
 		if len(values) != 2 {
 			logger.Log.Info("Invalid cookie format")
 			ctx.AbortWithStatus(http.StatusUnauthorized)
@@ -44,7 +46,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 		expectedSignature := hex.EncodeToString(h.Sum(nil))
 
 		if signature != expectedSignature {
-			logger.Log.Info("Invalid cookie signature. Crearing a new one...")
+			logger.Log.Info("Invalid cookie signature. Creating a new one...")
 			c, userID := createUUIDCookie(h)
 			ctx.SetCookie("user_id", c, int(maxAge.Unix()), "/", "", false, true)
 			ctx.Set("user_id", userID)
@@ -57,6 +59,7 @@ func CookieHandler(secret string) gin.HandlerFunc {
 	}
 }
 
+// createUUIDCookie generates a new UUID, calculates its HMAC signature, and returns both the concatenated cookie value and the UUID string.
 func createUUIDCookie(h hash.Hash) (string, string) {
 	uuid := uuid.New()
 	h.Write([]byte(uuid.String()))

@@ -1,3 +1,4 @@
+// Package handler provides HTTP request handlers for managing URL-related operations.
 package handler
 
 import (
@@ -12,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ShortenURLjson handles the HTTP POST request to shorten a URL using JSON input.
 func (h *Handler) ShortenURLjson(c *gin.Context) {
 	var req models.ShortenRequest
 	body := c.Request.Body
@@ -30,6 +32,7 @@ func (h *Handler) ShortenURLjson(c *gin.Context) {
 	dec := json.NewDecoder(body)
 	if err := dec.Decode(&req); err != nil {
 		c.Writer.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	if req.URL == "" {
@@ -41,16 +44,17 @@ func (h *Handler) ShortenURLjson(c *gin.Context) {
 	if err != nil {
 		var urlConflictError *apperrors.URLConflict
 		if errors.As(err, &urlConflictError) {
-			res := models.ShortenResponce{
+			res := models.ShortenResponse{
 				Result: shortenURL,
 			}
 			c.JSON(http.StatusConflict, res)
 			return
 		}
 		c.Writer.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	res := models.ShortenResponce{
+	res := models.ShortenResponse{
 		Result: shortenURL,
 	}
 

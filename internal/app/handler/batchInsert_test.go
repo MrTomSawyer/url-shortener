@@ -35,7 +35,7 @@ func TestBatchURLinsert(t *testing.T) {
 
 	type want struct {
 		code     int
-		response []models.BatchURLResponce
+		response []models.BatchURLResponse
 	}
 
 	tests := []struct {
@@ -59,7 +59,7 @@ func TestBatchURLinsert(t *testing.T) {
 			method:    "POST",
 			want: want{
 				code: 201,
-				response: []models.BatchURLResponce{
+				response: []models.BatchURLResponse{
 					{
 						CorrelationID: "1",
 						ShortURL:      "http://localhost:8080/e98192e1",
@@ -70,6 +70,8 @@ func TestBatchURLinsert(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		gin.SetMode(gin.ReleaseMode)
+
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 

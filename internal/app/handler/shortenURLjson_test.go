@@ -18,6 +18,8 @@ import (
 )
 
 func TestShortenURLjson(t *testing.T) {
+	gin.SetMode(gin.ReleaseMode)
+
 	cfg := config.AppConfig{}
 	cfg.Server.DefaultAddr = "http://localhost:8080"
 	cfg.Server.ServerAddr = ":8080"
