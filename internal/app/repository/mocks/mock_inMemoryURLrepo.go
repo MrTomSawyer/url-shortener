@@ -35,10 +35,10 @@ func (m *MockRepoHandler) EXPECT() *MockRepoHandlerMockRecorder {
 }
 
 // BatchCreate mocks base method.
-func (m *MockRepoHandler) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponce, error) {
+func (m *MockRepoHandler) BatchCreate(data []models.TempURLBatchRequest, userID string) ([]models.BatchURLResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BatchCreate", data, userID)
-	ret0, _ := ret[0].([]models.BatchURLResponce)
+	ret0, _ := ret[0].([]models.BatchURLResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
